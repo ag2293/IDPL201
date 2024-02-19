@@ -2,9 +2,9 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // initalise motors
-Adafruit_DCMotor *leftMotor = AFMS.getMotor(4);
-Adafruit_DCMotor *rightMotor = AFMS.getMotor(3);
-Adafruit_DCMotor *grabberMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *grabberMotor = AFMS.getMotor(3);
 
 
 //initalise motor variables
