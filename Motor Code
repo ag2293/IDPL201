@@ -14,3 +14,72 @@ int motorSpeed = xxx;
 // needs calibration
 // int timeLengthTurn90 = 1000;
 int timeLength = xxx;    // calibration value
+
+//setup motor
+  AFMS.begin();
+  leftMotor->setSpeed(0);
+  rightMotor->setSpeed(0);
+  grabberMotor->setSpeed(0);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
+  grabberMotor->run(FORWARD);
+  delay(1000);
+  pinMode(crossLed, OUTPUT);
+
+
+// DECLARE FUNCTIONS TO MOVE --
+
+void moveForwards (int x) {
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
+  delay(x);
+}
+
+void moveBackwards (int x) {
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(BACKWARD);
+  rightMotor->run(BACKWARD);
+  delay(x);
+}
+
+void stopMoving (int x) {
+  leftMotor->setSpeed(0);
+  rightMotor->setSpeed(0);
+  delay(x);
+}
+
+void turnRight (int x) {
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(0);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
+  delay(x);
+}
+
+void turnLeft (int x) {
+  leftMotor->setSpeed(0);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
+  delay(x);
+}
+
+void turn180 (int x) {
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(BACKWARD);
+  rightMotor->run(FORWARD);
+  delay(x);
+}
+
+// stationery turn right 
+void turn180_right (int x) {
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(FORWARD);
+  rightMotor->run(BACKWARD);
+  delay(x);
+}
