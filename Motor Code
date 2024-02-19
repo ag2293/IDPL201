@@ -1,0 +1,16 @@
+//initalise motorshield
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+
+// initalise motors
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(4);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(3);
+Adafruit_DCMotor *grabberMotor = AFMS.getMotor(2);
+
+
+//initalise motor variables
+int motorSpeed = xxx;
+
+// define turning times
+// needs calibration
+// int timeLengthTurn90 = 1000;
+int timeLength = xxx;    // calibration value
