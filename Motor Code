@@ -55,14 +55,14 @@ void turnRight (int x) {
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(0);
   leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
+  rightMotor->run(BACKWARD);
   delay(x);
 }
 
 void turnLeft (int x) {
   leftMotor->setSpeed(0);
   rightMotor->setSpeed(motorSpeed);
-  leftMotor->run(FORWARD);
+  leftMotor->run(BACKWARD);
   rightMotor->run(FORWARD);
   delay(x);
 }
