@@ -36,27 +36,4 @@ void loop() {
 
 
 
-    digitalWrite(s2, LOW); //s2 means some pin 
-    digitalWrite(s3, LOW);
-    red = pulseIn(outPin, LOW); // Reading RED component of color
   
-    digitalWrite(s2, HIGH);
-    digitalWrite(s3, HIGH);
-    green = pulseIn(outPin, LOW); // Reading GREEN component of color
-    
-    digitalWrite(s2, LOW);
-    digitalWrite(s3, HIGH);
-    blue = pulseIn(outPin, LOW); // Reading BLUE component of color
-
-//need calibration
-void getColor()
-{  
-  readRGB();
-       if (red > 8  && red < 18   &&  grn >  9 && grn < 19    &&  blu > 8  && blu < 16)   color = "WHITE";
-  else if (red > 80 && red < 125  &&  grn > 90 && grn < 125   &&  blu > 80 && blu < 125)  color = "BLACK";
-  else if (red > 12 && red < 30   &&  grn > 40 && grn < 70    &&  blu > 33 && blu < 70)   color = "RED";
-  else if (red > 50 && red < 95   &&  grn > 35 && grn < 70    &&  blu > 45 && blu < 85)   color = "GREEN";
-  else if (red > 10 && red < 20   &&  grn > 10 && grn < 25    &&  blu > 20 && blu < 38)   color = "YELLOW";
-  else if (red > 65 && red < 125  &&  grn > 65 && grn < 115   &&  blu > 32 && blu < 65)   color = "BLUE";
-  else  color = "NO_COLOR";
-}
