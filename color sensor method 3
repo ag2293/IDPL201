@@ -1,4 +1,22 @@
-   digitalWrite(s2, LOW); //s2 means some pin 
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
+
+// Create sensor instance
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+
+void setup() {
+  Serial.begin(9600);
+  if (tcs.begin()) {
+    Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 sensor found ... check your connections");
+    while (1); // halt if sensor not found
+  }
+}
+
+
+
+digitalWrite(s2, LOW); //s2 means some pin 
     digitalWrite(s3, LOW);
     red = pulseIn(outPin, LOW); // Reading RED component of color
   
