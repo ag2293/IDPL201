@@ -1,0 +1,37 @@
+void loop() {
+  uint16_t clear, red, green, blue;
+
+  tcs.getRawData(&red, &green, &blue, &clear);
+
+  // Convert the readings to a more familiar format
+  float r, g, b;
+  r = red; g = green; b = blue;
+  float sum = r + g + b;
+  r /= sum;
+  g /= sum;
+  b /= sum;
+
+  // Identify color
+  if (r > 0.5) {
+    Serial.println("Detected Red!");
+  } else if (g > 0.5) {
+    Serial.println("Detected Green!");
+  } else if (b > 0.5) {
+    Serial.println("Detected Blue!");
+  } else {
+    Serial.println("Color unclear");
+  }
+
+  delay(1000); // Wait for 1 second before next reading
+}
+
+
+//principle: 
+
+//Reading RGB Values: The sensor's getRawData() function fetches the raw RGB and clear light values. 
+//These are then normalized by dividing each by the sum of all three, converting them into a range more comfortable to work with and somewhat 
+//compensating for different light levels.
+
+//Identifying Colors: The code then checks if red, green, or blue dominates the color composition. 
+//Based on which color has the highest proportion, it makes a simple determination. 
+//The thresholds (r > 0.5, g > 0.5, b > 0.5) are arbitrary and might need adjustment based on your specific needs and lighting conditions.
