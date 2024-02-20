@@ -1,0 +1,35 @@
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
+
+// Create sensor instance
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+
+void setup() {
+  Serial.begin(9600);
+  if (tcs.begin()) {
+    Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 sensor found ... check your connections");
+    while (1); // halt if sensor not found
+  }
+}
+
+void loop() {
+  uint16_t clear, red, green, blue;
+
+  tcs.getRawData(&red, &green, &blue, &clear);
+
+  Serial.print("C:"); Serial.print(clear);
+  Serial.print(" R:"); Serial.print(red);
+  Serial.print(" G:"); Serial.print(green);
+  Serial.print(" B:"); Serial.print(blue);
+
+  // Calculate color temperature and lux based on raw data
+  uint16_t colorTemp = tcs.calculateColorTemperature_dn40(red, green, blue, clear);
+  uint16_t lux = tcs.calculateLux(red, green, blue);
+
+  Serial.print(" Color Temp:"); Serial.print(colorTemp, DEC);
+  Serial.print(" Lux:"); Serial.println(lux, DEC);
+
+  delay(1000); // Wait for a second before next reading
+}
