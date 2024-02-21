@@ -17,7 +17,8 @@ void loop(){
 
 
 
-// Algorithm Logic
+// Algorithm Logic of following line and detect cross
+
 //define pins for line sensors
 #define leftLineSensor A0
 #define centreLineSensor A1
@@ -57,4 +58,15 @@ void straight_line_sensor (int timeLength){
         moveForwards(timeLength);
     }
   
+}
+
+// detects whether there is a cross
+void cross (int x) {
+  if (leftLineValue < leftLineValueTolerance && rightLineValue < rightLineValueTolerance && centreLineValue < centreLineValueTolerance) {
+  isOnCross = true;
+  digitalWrite(crossLed, HIGH);
+  delay(x);
+  digitalWrite(crossLed, LOW);
+  cross_no += 1;
+  }
 }
