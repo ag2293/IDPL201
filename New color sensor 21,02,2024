@@ -1,0 +1,53 @@
+// Define pin connections
+#define S0 4
+#define S1 5
+#define S2 6
+#define S3 7
+#define sensorOut 2
+
+// Threshold value for detecting red
+// Adjust this based on experimental results
+unsigned int redThreshold = 100; // just an example value, needs calibration
+
+void setup() {
+  Serial.begin(9600);
+  
+  // Set frequency scaling to 20%
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+
+  // Set sensorOut as input
+  pinMode(sensorOut, INPUT);
+
+  // Set color selection pins as output
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+}
+
+void loop() {
+  // Detect red
+  unsigned int frequency = readColorFrequency();
+
+  if (frequency > redThreshold) {
+    // Red detected
+    Serial.println("1 (Red)");
+  } else {
+    // Assuming black if not red
+    Serial.println("0 (Black)");
+  }
+  
+  delay(1000); // Delay for 1 second before next reading
+}
+
+unsigned int readColorFrequency() {
+  // Select red filter
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, LOW);
+  
+  // Read the frequency of red light
+  unsigned int frequency = pulseIn(sensorOut, LOW);
+  
+  return frequency;
+}
