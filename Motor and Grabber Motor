@@ -51,22 +51,55 @@ void setup() {
   pinMode(BLUE_LED_PIN, OUTPUT);
 }
 
+void flashBlueLED() {
+  if (isMoving) {
+    unsigned long currentMillis = millis();
+    static unsigned long previousMillis = 0;
+    const long interval = 250; // LED on/off interval set to 250ms for 2Hz flash rate
+
+    if (currentMillis - previousMillis >= interval) {
+      // save the last time we blinked the LED
+      previousMillis = currentMillis;
+
+      // if the LED is off turn it on and vice-versa:
+      int ledState = digitalRead(BLUE_LED_PIN); 
+      digitalWrite(BLUE_LED_PIN, !ledState); 
+    }
+  } else {
+    digitalWrite(BLUE_LED_PIN, LOW); 
+  }
+}
 
 // DECLARE FUNCTIONS TO MOVE --
 
 void moveForwards (int x) {
+  isMoving = true; // Start moving
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
+  unsigned long moveEndTime = millis() + x;
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
 void moveBackwards (int x) {
+  isMoving = true;
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(BACKWARD);
   rightMotor->run(BACKWARD);
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
@@ -77,35 +110,63 @@ void stopMoving (int x) {
 }
 
 void turnRight (int x) {
+  isMoving = true;
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(0);
   leftMotor->run(FORWARD);
   rightMotor->run(BACKWARD);
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
 void turnLeft (int x) {
+  isMoving = true;
   leftMotor->setSpeed(0);
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(BACKWARD);
   rightMotor->run(FORWARD);
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
 void turn180 (int x) {
+  isMoving = true;
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(BACKWARD);
   rightMotor->run(FORWARD);
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
 // stationery turn right 
 void turn180_right (int x) {
+  isMoving = true;
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(FORWARD);
   rightMotor->run(BACKWARD);
+  unsigned long moveEndTime = millis() + x;
+  while (millis() < moveEndTime) {
+      flashBlueLED();
+  }
+  isMoving = false;
+  stopMoving(0);
   delay(x);
 }
 
