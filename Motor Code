@@ -1,6 +1,11 @@
+
+// servo
+Servo platform_servo;
+
+int servo_pos = 0;
+
 //initalise motorshield
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-
 // initalise motors
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
@@ -15,6 +20,9 @@ int motorSpeed = xxx;
 // int timeLengthTurn90 = 1000;
 int timeLength = xxx;    // calibration value
 
+// set up grabber_motor
+  pinMode(movingLed, OUTPUT);
+
 //setup motor
   AFMS.begin();
   leftMotor->setSpeed(0);
@@ -27,10 +35,18 @@ int timeLength = xxx;    // calibration value
   pinMode(crossLed, OUTPUT);
 
 
+
+  // initialize servo
+  platform_servo.attach(9);
+  servo_down();
+
+  Serial.begin(9600); // set up serial monitor
+}
+
+
+
 #define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
-
 bool isMoving = false; // Tracks whether the robot is moving
-
 void setup() {
   pinMode(BLUE_LED_PIN, OUTPUT);
 }
