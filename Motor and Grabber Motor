@@ -146,10 +146,10 @@ void pickup_bolck() {
    grabber_motor_down();
    servo_up();
    delay(50);
-   
-   if (isMetal = false);
-   digitalWrite(palstic,HIGH);
+//adjust later for the following lines   
+   if (isRed = true);
+   digitalWrite(xxx,HIGH);
    else 
-   digitalWrite(Metal,LOW);
+   digitalWrite(xxxx,LOW);
 
 }
