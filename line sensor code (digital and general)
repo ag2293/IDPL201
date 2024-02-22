@@ -1,0 +1,189 @@
+int left_line_sensor_pin=2; // left line sensor 
+int right_line_sensor_pin=3; // right line sensor
+int front_line_sensor_pin =4; // sensor on line at front 
+//int back_line_sensor_pin =5; // sensor on line at back 
+
+// maybe have back sensor mean speed is increase. I.e., keep moving forward if back sensor not on line but be ready to correct by going slower
+// might be a good idea for car to recognise its arrived at a junction and then proceed to do next step in route: trigger a junction function
+// in junction code, deal with whichever junction is true and then set to false again
+// HAVE FORWARD SENSOR positioned so if it comes to T-junction still on line even if left or right are as well
+// FRONT LINE SENSORS all horizontally in line none ahead of each other
+
+
+// for now, no motor control integrated, just to see if sensors responsive to path.
+
+bool at_T_junction = false;// can only go left or right
+bool at_right_T_junction = false;// can only go right or forward
+bool at_left_T_junction = false;// can only go left or forward
+bool resteer = true;// needs to resteer onto line --> either curved track or vehichle oriented wrong. BACK wheel drive so easier to self correct --> back doesn't move much even if front swings.
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);           //Start serial and set the correct Baud Rate
+
+  pinMode(left_line_sensor_pin, INPUT); // initialize Right sensor as an inut
+  pinMode(right_line_sensor_pin, INPUT); // initialize Left sensor as as input
+  pinMode(front_line_sensor_pin, INPUT); // initialize front sensor as an inut
+  //pinMode(back_line_sensor_pin, INPUT); // initialize back sensor as as input
+  attachInterrupt(digitalPinToInterrupt(front_line_sensor_pin), front_not_on_line, FALLING);// if front sensor not on line anymore either: T-junction, or needs to resteer onto line
+}
+
+void loop() {
+  int left_line_value = digitalRead(left_line_sensor_pin); // read left input value
+  Serial.print(left_line_value);
+  int right_line_value = digitalRead(right_line_sensor_pin); // read right input value
+  Serial.println(right_line_value);
+  int front_line_value = digitalRead(front_line_sensor_pin); // read front input value
+  Serial.print(front_line_value);
+  //int back_line_value = digitalRead(back_line_sensor_pin); // read back input value
+  //Serial.println(back_line_value);
+  delay(100);
+
+  if (front_line_value == 1){// if front on line
+
+    //
+    /*if(left_line_value==0 && right_line_value==0 && back_line_value==1){ //FORWARD definetly oriented
+      Serial.print("FORWARD FULL"); 
+    }
+    if(left_line_value==0 && right_line_value==0 && back_line_value==0){ //FORWARD slow as definetly veering off line
+      Serial.print("FORWARD SLOW"); 
+    }*/
+
+    if(left_line_value==0 && right_line_value==0){ //FORWARD if left black right black and front white
+      Serial.print("FORWARD"); 
+    }
+    else if(left_line_value==1 && right_line_value==1){ //LEFT possible RIGHT possible junction
+      at_T_junction = true;
+      Serial.print("at END of T-JUNCTION");
+      Serial.print("LEFT or RIGHT");
+
+      // trigger junction function
+
+    }
+    else if(left_line_value==1 && right_line_value==0){ //LEFT possible
+      at_left_T_junction = true;
+      Serial.print("LEFT or FORWARD"); 
+
+      // trigger junction function
+
+    }
+    else if(left_line_value==0 && right_line_value==1){ //RIGHT possible
+      at_right_T_junction = true;
+      Serial.print("RIGHT or FORWARD"); 
+
+      // trigger junction function
+
+    }
+    
+  }
+
+  // IS AN INTERRUPT EVEN NEEDED --> just keep checking if front has left as above code will execute fast
+
+  /*
+  else {
+    //stop motion
+
+    detatchInterrupt(digitalPinToInterrupt(front_line_sensor_pin));//
+    int left_line_value = digitalRead(left_line_sensor_pin); // read left input value
+    int right_line_value = digitalRead(right_line_sensor_pin); // read right input value
+    
+    resteer = true;
+
+    while (digitalRead(left_line_sensor_pin) == 1 || digitalRead(right_line_sensor_pin) == 1) {//until either side sensor isn't on line, go forward
+      if(left_line_value==1){ // if left on line TURN a bit left 
+        Serial.print("left a bit"); 
+
+        // increase right motor speed 
+        
+        
+        while (digitalRead(left_line_sensor_pin) == 1) {
+          delay(100);
+        }
+        
+
+        //decrease right motor speed
+        
+      }
+      else if(right_line_value==1){ // if right on line TURN a bit right 
+        Serial.print("right a bit"); 
+
+        // increase left motor speed 
+
+        
+        while (digitalRead(right_line_sensor_pin) == 1) {
+          delay(100);
+        }
+        
+
+        //decrease left motor speed
+
+      }
+
+      //start forward motion briefly
+
+      //stop forward motion
+
+    }
+
+    resteer = false;
+
+    
+    attachInterrupt(digitalPinToInterrupt(front_line_sensor_pin), resteer, FALLING);// Keep checking for veering off line 
+
+    // restart motion
+  }
+  */
+  
+  
+}
+
+void front_not_on_line(){// Interrupt Service Routine
+
+  // stop motion FUNCTION
+
+  detatchInterrupt(digitalPinToInterrupt(front_line_sensor_pin));//
+  int left_line_value = digitalRead(left_line_sensor_pin); // read left input value
+  int right_line_value = digitalRead(right_line_sensor_pin); // read right input value
+  
+  resteer = true;
+
+  while (digitalRead(left_line_sensor_pin) == 1 || digitalRead(right_line_sensor_pin) == 1) {//until either side sensor isn't on line, go forward
+    if(left_line_value==1){ // if left on line TURN a bit left 
+      Serial.print("left a bit"); 
+
+      // increase right motor speed FUNCTION
+      
+      /*
+      while (digitalRead(left_line_sensor_pin) == 1) {
+        delay(100);
+      }
+      */
+
+      //decrease right motor speed FUNCTION
+      
+    }
+    else if(right_line_value==1){ // if right on line TURN a bit right 
+      Serial.print("right a bit"); 
+
+      // increase left motor speed FUNCTION
+
+      /*
+      while (digitalRead(right_line_sensor_pin) == 1) {
+        delay(100);
+      }
+      */
+
+      //decrease left motor speed FUNCTION
+
+    }
+
+  }
+
+  resteer = false;
+
+  
+  attachInterrupt(digitalPinToInterrupt(front_line_sensor_pin), resteer, FALLING);// Keep checking for veering off line 
+
+  // restart motion
+
+}
