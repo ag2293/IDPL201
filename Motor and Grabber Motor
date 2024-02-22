@@ -42,13 +42,14 @@ void setup() {
   // Initialize pin modes
   pinMode(BLUE_LED_PIN, OUTPUT);
   pinMode(movingLed, OUTPUT);
-  pinMode(crossLed, OUTPUT);
+ 
 
   // Attach the servo to its control pin
   platform_servo.attach(1); // Ensure pin 9 is correct for your servo
 
   // Initialize Serial Communication at 9600 baud rate
   Serial.begin(9600);
+  delay(100); // Ensure serial communication is fully set up
 
   // Additional setup as needed
 }
