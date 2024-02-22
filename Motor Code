@@ -108,3 +108,48 @@ void turn180_right (int x) {
   rightMotor->run(BACKWARD);
   delay(x);
 }
+
+void grabber_motor_close () { 
+  grabberMotor-> setSpeed(255);
+  delay(950);
+  grabberMotor-> setSpeed(0);
+}
+
+
+void grabber_motor_open () {
+  grabberMotor-> setSpeed(255);
+  grabberMotor -> run(BACKWARD);
+  delay(900);
+  grabberMotor-> setSpeed(0);
+}
+
+void servo_down () {
+    for (servo_pos = 0; servo_pos <= 90; servo_pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    platform_servo.write(servo_pos);              // tell servo to go to position in variable 'pos'
+    delay(50);                       // waits 15ms for the servo to reach the position
+  }
+}
+
+void servo_up () {
+
+  for (servo_pos = 90; servo_pos >= 0; servo_pos -= 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree // minus 1
+    platform_servo.write(servo_pos);              // tell servo to go to position in variable 'pos'
+    delay(50);                       // waits 15ms for the servo to reach the position
+}
+}
+
+void pickup_bolck() {
+   stopmoving(3000);
+   servo_down();
+   grabber_motor_down();
+   servo_up();
+   delay(50);
+   
+   if (isMetal = false);
+   digitalWrite(palstic,HIGH);
+   else 
+   digitalWrite(Metal,LOW);
+
+}
