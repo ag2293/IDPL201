@@ -18,7 +18,7 @@ void setup() {
 } 
 
 void loop() { 
-
+  //was testing for head sensor (beak had value of 30 to get to forward position (maybe 55 to get to open position)
   delay(2000);
   myservo.write(45);
 
