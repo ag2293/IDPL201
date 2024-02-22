@@ -13,9 +13,9 @@ Adafruit_DCMotor *grabberMotor = AFMS.getMotor(3);
 
 
 //initalise motor variables
-int motorSpeed = xxx;
+int motorSpeed = 250;
 // define turning times,needs calibration
-int timeLength = xxx;    // calibration value
+int timeLength = 200;    // calibration value
 
 
 //initalise Led
