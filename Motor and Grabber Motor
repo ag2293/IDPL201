@@ -1,5 +1,5 @@
 
-// servo
+// Initialize servo
 Servo platform_servo;
 
 int servo_pos = 0;
@@ -14,41 +14,43 @@ Adafruit_DCMotor *grabberMotor = AFMS.getMotor(3);
 
 //initalise motor variables
 int motorSpeed = xxx;
-
-// define turning times
-// needs calibration
-// int timeLengthTurn90 = 1000;
+// define turning times,needs calibration
 int timeLength = xxx;    // calibration value
 
-// set up grabber_motor
-  pinMode(movingLed, OUTPUT);
 
-//setup motor
+//initalise Led
+#define movingLed 1
+#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
+
+
+// Tracks whether the robot is moving
+bool isMoving = false; // Tracks whether the robot is moving
+
+
+void setup() {
+  // Start the motor shield
   AFMS.begin();
+  // Set initial motor speed to 0
   leftMotor->setSpeed(0);
   rightMotor->setSpeed(0);
   grabberMotor->setSpeed(0);
+  // Initial direction
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
   grabberMotor->run(FORWARD);
-  delay(1000);
+
+  // Initialize pin modes
+  pinMode(BLUE_LED_PIN, OUTPUT);
+  pinMode(movingLed, OUTPUT);
   pinMode(crossLed, OUTPUT);
 
+  // Attach the servo to its control pin
+  platform_servo.attach(1); // Ensure pin 9 is correct for your servo
 
+  // Initialize Serial Communication at 9600 baud rate
+  Serial.begin(9600);
 
-  // initialize servo
-  platform_servo.attach(9);
-  servo_down();
-
-  Serial.begin(9600); // set up serial monitor
-}
-
-
-
-#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
-bool isMoving = false; // Tracks whether the robot is moving
-void setup() {
-  pinMode(BLUE_LED_PIN, OUTPUT);
+  // Additional setup as needed
 }
 
 void flashBlueLED() {
@@ -70,6 +72,8 @@ void flashBlueLED() {
   }
 }
 
+
+
 // DECLARE FUNCTIONS TO MOVE --
 
 void moveForwards (int x) {
@@ -78,7 +82,6 @@ void moveForwards (int x) {
   rightMotor->setSpeed(motorSpeed);
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
-  unsigned long moveEndTime = millis() + x;
   unsigned long moveEndTime = millis() + x;
   while (millis() < moveEndTime) {
       flashBlueLED();
@@ -201,10 +204,12 @@ void servo_up () {
 }
 }
 
+//for now, I have properly write this paragraph yet so I make the whole paragraph become annotation 
+/*
 void pickup_bolck() {
    stopmoving(3000);
    servo_down();
-   grabber_motor_down();
+   grabber_motor_close(); //?
    servo_up();
    delay(50);
 //adjust later for the following lines   
@@ -214,3 +219,4 @@ void pickup_bolck() {
    digitalWrite(xxxx,LOW);
 
 }
+*/
