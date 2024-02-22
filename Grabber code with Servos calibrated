@@ -1,0 +1,43 @@
+
+//ALWAYS CALIBRATE WHERE 0 is --> ie where it goes to at start and make sure 0 is set to sensible value
+// Stick to positive angles
+//Check quick motion schematic of head and beak
+#include <Servo.h>;
+Servo myservo;
+ // create servo object to control a servo 
+ // twelve servo objects can be created on most boards 
+ int pos = 0; 
+ // variable to store the servo position void 
+ 
+void setup() { 
+  myservo.write(0);
+  myservo.attach(9); 
+  // attaches the servo on pin 9 to the servo object 
+  //always GOES TO 0 at start 
+  pos = 0;
+} 
+
+void loop() { 
+
+  delay(2000);
+  myservo.write(45);
+
+  delay(2000);
+  myservo.write(51);
+
+  delay(2000);
+  myservo.write(0);
+
+  delay(1000000000);
+
+  /*for (pos = 0; pos <= 13; pos += 1) { // goes from 0 degrees to 13 degrees // in steps of 1 degree 
+    myservo.write(pos); // tell servo to go to position in variable 'pos' 
+    delay(15); // waits 15 ms for the servo to reach the position 
+  } 
+  for (pos = 13; pos >= 0; pos -= 1) { // goes from 13 degrees to 0 degrees 
+    myservo.write(pos); // tell servo to go to position in variable 'pos' 
+    delay(15); // waits 15 ms for the servo to reach the position } }
+  }*/
+}
+
+
