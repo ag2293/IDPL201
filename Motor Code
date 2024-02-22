@@ -27,6 +27,15 @@ int timeLength = xxx;    // calibration value
   pinMode(crossLed, OUTPUT);
 
 
+#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
+
+bool isMoving = false; // Tracks whether the robot is moving
+
+void setup() {
+  pinMode(BLUE_LED_PIN, OUTPUT);
+}
+
+
 // DECLARE FUNCTIONS TO MOVE --
 
 void moveForwards (int x) {
