@@ -182,7 +182,7 @@ void front_not_on_line(){// Interrupt Service Routine
   resteer = false;
 
   
-  attachInterrupt(digitalPinToInterrupt(front_line_sensor_pin), resteer, FALLING);// Keep checking for veering off line 
+  attachInterrupt(digitalPinToInterrupt(front_line_sensor_pin), front_not_on_line, FALLING);// Keep checking for veering off line 
 
   // restart motion
 
