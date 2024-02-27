@@ -1,0 +1,39 @@
+#include <Ticker.h>
+//INSTALL Ticker library
+//https://github.com/sstaub/Ticker 
+
+void blinkLED();
+
+Ticker led_flipper(blinkLED, 250); 
+bool led = false;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  
+  led_flipper.start(); //start the ticker.
+  Serial.println("HELLO WORLD");
+
+  
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  
+  delay(100);
+  led_flipper.update();
+
+}
+
+void blinkLED(){
+  if (led == false){
+    Serial.print("LED on");
+    led = true;
+  }
+  else if (led == true){
+    Serial.print("LED off");
+    led = false;
+  }
+}
