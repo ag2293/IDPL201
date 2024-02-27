@@ -4,6 +4,8 @@
 
 void blinkLED();
 
+isMoving = false;
+
 Ticker led_flipper(blinkLED, 250); 
 bool led = false;
 
@@ -28,12 +30,19 @@ void loop() {
 }
 
 void blinkLED(){
-  if (led == false){
-    Serial.print("LED on");
-    led = true;
+  if (isMoving == true){
+    if (led == false){
+      Serial.print("LED on");
+      led = true;
+    }
+    else if (led == true){
+      Serial.print("LED off");
+      led = false;
+    }
   }
-  else if (led == true){
-    Serial.print("LED off");
+  else {
+    Serial.print("LED fully off");
     led = false;
   }
+  
 }
