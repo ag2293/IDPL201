@@ -4,7 +4,13 @@ enum Movement {
   Turn_180_Left, Turn_180_Right, Block_Detection, Drop_Block
 };
 
-// Define routes based on the given instructions
+
+
+
+
+
+
+// Define routes 
 Movement route1[] = {Forward, Left, Forward, Right, Block_Detection};
 Movement route2[] = {Reverse, Left, Forward, Left, Forward, Drop_Block, Turn_180_Left};
 Movement route3[] = {Reverse, Right, Forward, Forward_FR, Right, Forward, Drop_Block};
@@ -35,9 +41,21 @@ int routeSizes[] = {
 };
 
 
+
+
+
+
+
 // Track Route Completion
 bool routesCompleted[17] = {false}; // Tracks completion of all 17 routes
 
+
+
+
+
+
+
+//Execute Movement Function
 void executeMovement(Movement move) {
   switch (move) {
     case Forward:
@@ -74,5 +92,72 @@ void executeMovement(Movement move) {
       dropBlock();
       break;
   }
-  // You may want to add a delay or additional logic after each movement
+  
 }
+
+
+
+
+
+
+//Execute Route Function 
+// Assume executeMovement and related movement functions are defined as in previous steps
+
+void executeRoute(int routeIndex) {
+  Serial.print("Starting Route: ");
+  Serial.println(routeIndex + 1);
+  
+  for (int i = 0; i < routeSizes[routeIndex]; i++) {
+    Movement move = routes[routeIndex][i];
+    executeMovement(move); // Execute each movement in the route
+
+    // Implement route-specific logic if needed
+    if (move == Block_Detection) {
+      // Add logic for block detection, might involve sensor reading and conditional logic
+    } else if (move == Drop_Block) {
+      // Add logic for dropping the block, could involve actuator/servo control
+    }
+
+    // Add a delay or sensor check between movements if necessary
+    delay(500); // Example delay, adjust based on your robot's speed and task requirements
+  }
+
+  Serial.print("Completed Route: ");
+  Serial.println(routeIndex + 1);
+  routesCompleted[routeIndex] = true; // Mark the route as completed
+}
+
+
+
+
+
+
+
+
+//Main Logic with Initialization and Dynamic Route Transition
+void setup() {
+  Serial.begin(9600); // Initialize serial communication
+  // Initialize motors, sensors, etc.
+}
+
+void loop() {
+  static int currentRoute = 0; // Tracks the current route
+
+  // Execute routes sequentially, checking completion
+  if (currentRoute < sizeof(routes) / sizeof(routes[0])) {
+    if (!routesCompleted[currentRoute]) {
+      executeRoute(currentRoute); // Execute the current route
+      currentRoute++; // Proceed to the next route
+    }
+  } else {
+    Serial.println("All routes completed.");
+    while(true); // Halt further execution, or implement a reset mechanism
+  }
+
+  // Add any continuous monitoring or additional tasks outside route execution
+}
+
+
+
+
+
