@@ -1,0 +1,76 @@
+
+//ALWAYS CALIBRATE WHERE 0 is --> ie where it goes to at start and make sure 0 is set to sensible value
+// Stick to positive angles
+//Check quick motion schematic of head and beak
+#include <Servo.h>;
+Servo beak_servo;
+Servo head_servo;
+
+
+int open_pos_beak_servo = 55; 
+int closed_pos_beak_servo = 0; 
+int up_pos_head_servo = 95; 
+int down_pos_head_servo = 0; 
+int down_pos_lifted_head_servo = 20; 
+
+ 
+void setup() { 
+  beak_servo.write(closed_pos_beak_servo);//start closed
+  beak_servo.attach(3);// callibrate pin.
+
+  
+  head_servo.write(up_pos_head_servo);//start up
+  head_servo.attach(9);// callibrate pin
+
+  delay(1000);
+  Serial.begin(9600);
+  Serial.println("test");
+  
+} 
+
+void loop() { 
+
+  delay(2000);
+  //beak_servo.write(open_pos_beak_servo);
+
+  delay(2000);
+  //beak_servo.write(closed_pos_beak_servo);
+  
+
+  delay(2000);
+  head_servo.write(down_pos_head_servo);
+
+  delay(2000);
+  head_servo.write(down_pos_lifted_head_servo);
+  
+  delay(2000);
+  //beak_servo.write(down_pos_lifted_head_servo);
+
+  delay(2000);
+  head_servo.write(up_pos_head_servo);
+
+  delay(2000);
+  //beak_servo.write(down_pos_lifted_head_servo);
+  
+
+  delay(1000);
+  //beak_servo.write(down_pos_lifted_head_servo);
+
+  //beak_servo.write(up_pos_head_servo);
+
+  
+
+
+  delay(10000);
+
+  /*for (pos = 0; pos <= 13; pos += 1) { // goes from 0 degrees to 13 degrees // in steps of 1 degree 
+    myservo.write(pos); // tell servo to go to position in variable 'pos' 
+    delay(15); // waits 15 ms for the servo to reach the position 
+  } 
+  for (pos = 13; pos >= 0; pos -= 1) { // goes from 13 degrees to 0 degrees 
+    myservo.write(pos); // tell servo to go to position
+    delay(15); // waits 15 ms for the servo to reach the position 
+  }
+  */
+
+}
