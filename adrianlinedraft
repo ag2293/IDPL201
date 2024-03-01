@@ -1,0 +1,140 @@
+// -----MOTOR INITILIASATION-------
+#include <Adafruit_MotorShield.h>
+
+//initalise motorshield
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+// initalise motors
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(3);//M4 pin
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(4);//M3 pin
+
+
+//initalise motor variables
+int motorSpeed = 250;
+int turnSteeringMotorSpeed = 150;//CALIBRATE
+int timeLength = 200; // define turning time
+bool isMoving = false; // Tracks whether the robot is moving
+
+// ----------------------------------
+
+// -----LED INITILIASATION-------
+
+bool LED = false;
+
+/*
+//initalise Led
+#define movingLed 1
+#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
+*/
+
+// ----------------------------------
+
+// -----Line Sensor INITILIASATION-------
+
+int far_left_line_sensor_pin=2; // left line sensor 
+int far_right_line_sensor_pin=13; // right line sensor
+int centre_left_line_sensor_pin =4; // sensor on line at front 
+int centre_right_line_sensor_pin =11; // sensor on line at back 
+
+// ----------------------------------
+
+// -----Junction INITILIASATION-------
+
+bool at_junction = false;// can only go left or right
+bool resteer = true;// needs to resteer onto line --> either curved track or vehichle oriented wrong. BACK wheel drive so easier to self correct --> back doesn't move much even if front swings.
+bool stop_moving = false;
+bool junction = false;
+
+// ----------------------------------
+
+
+
+void setup() {
+  // Start the motor shield
+  AFMS.begin();
+  // Set initial motor speed to 0
+  leftMotor->setSpeed(0);
+  rightMotor->setSpeed(0);
+
+  // Initial direction
+  leftMotor->run(BACKWARD);
+  rightMotor->run(BACKWARD);
+  
+
+  pinMode(far_left_line_sensor_pin, INPUT); // initialize Right sensor as an inut
+  pinMode(far_right_line_sensor_pin, INPUT); // initialize Left sensor as as input
+  pinMode(centre_right_line_sensor_pin, INPUT); // initialize front sensor as an inut
+  pinMode(centre_left_line_sensor_pin, INPUT); // initialize back sensor as as input
+
+  // Initialize Serial Communication at 9600 baud rate
+  Serial.begin(9600);
+
+  delay(100); // Ensure serial communication is fully set up
+
+  // Additional setup as needed
+}
+void loop() {
+  int fl = digitalRead(far_left_line_sensor_pin); // read far left input value
+  int fr = digitalRead(far_right_line_sensor_pin); // read far right input value
+  int cl = digitalRead(centre_left_line_sensor_pin); // read centre left input value
+  int cr = digitalRead(centre_right_line_sensor_pin); // read centre right input value
+
+
+  //GO FORWARD IF ALL GOOD
+  if(fl==0 && fr==0 && cr==0 && cl==0 ){
+    leftMotor->setSpeed(150);
+    rightMotor->setSpeed(150);
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  //LINE FOLLOWING CORRECTION LEFT ON LINE
+  else if(fl==0 && cl==1 && cr==0 && fr==0 ){
+    leftMotor->setSpeed(50);
+    rightMotor->setSpeed(150);
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  //LINE FOLLOWING CORRECTION RIGHT ON LINE
+  else if(fl==0 && cl==0 && cr==1 && fr==0 ){
+    leftMotor->setSpeed(150);
+    rightMotor->setSpeed(50);
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  //JUNCTION DETECTION
+  else if((fl==1 || fr==1) || junction==true){
+    junction=true;
+//in future will do execution of whatever turn needed at this junction, for now turn whichever side of junction is detected first
+    if(fl==1){
+      leftMotor->setSpeed(0);
+      rightMotor->setSpeed(150);
+      leftMotor->run(BACKWARD);
+      rightMotor->run(BACKWARD);
+      while(fr==0){
+        if(fr==1){
+          break;
+        }
+      while(fr==1){
+        if(fr==0){
+          break;
+        }
+      }
+    if(fr==1){
+      leftMotor->setSpeed(150);
+      rightMotor->setSpeed(0);
+      leftMotor->run(BACKWARD);
+      rightMotor->run(BACKWARD);
+      while(fl==0){
+        if(fl==1){
+          break;
+        }
+      while(fl==1){
+        if(fl==0){
+          break;
+        }
+      }
+     }
+    }
+  }
+ }
+}
+}
