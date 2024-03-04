@@ -113,8 +113,11 @@ void loop() {
 
   
 
-  
+  // NORMAL FORWARD MOTION
+
+
   if (detect_block == true){
+
     distance = distance - detection_offset_block;//offset in sensor (in built dont change)
     if (distance <= detection_distance){
       colour_read = true;
@@ -139,6 +142,8 @@ void loop() {
     if (distance < grabber_distance) {
       Serial.println("In range to pick up.");
 
+      // STOP MOVING
+
       ////TEST
       openBeak();
       downHead();
@@ -147,6 +152,7 @@ void loop() {
       ////TEST
 
       delay(10000);
+      detect_block = false;
     }
   }
 
@@ -155,6 +161,8 @@ void loop() {
     // Check if the distance is smaller than dropping off distance
     if (distance < wall_distance) {
       Serial.println("In range to drop off.");
+
+      // STOP MOVING
 
       ////TEST
       downHead();
@@ -166,6 +174,8 @@ void loop() {
 
 
       delay(10000);
+
+      detect_wall = false;
     }
   }
 
