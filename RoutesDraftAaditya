@@ -1,0 +1,181 @@
+//Movement Enumeration and Route Definitions:
+enum Movement {
+  Reverse, Left, Right, Forward_FR, Forward_FL, Forward_RF, 
+  Turn_180_Left, Turn_180_Right, Block_Detection, Drop_Block
+};
+
+/*
+////CHANGES NEED
+- remove any forward commands in route --> forward is intrinsic except at a junction
+- double check route
+- check 180 degree which way --> also might need to set left or right and detect junction to true outside of line sensor check and then set to false (maybe have var called turn_180)
+
+*/
+
+//define if within a route
+bool insideRoute = false;
+
+int currentRoute = 0; // Tracks the current route
+int indexInsideRoute = 0; //tracks within
+
+
+
+
+// Define routes 
+Movement route1[] = {Left,  Right, Block_Detection};// START to pickup 1
+Movement route2[] = {Reverse, Left,  Left,  Drop_Block, Turn_180_Left};// pick up 1 to green
+Movement route3[] = {Reverse, Right, Forward_FR, Right,  Drop_Block};//pick up 1 to red
+Movement route4[] = {Turn_180_Left,  Forward_RF, Right,  Forward_FL, Right,  Block_Detection};
+Movement route5[] = { Forward_FL, Left,  Left,  Block_Detection};
+Movement route6[] = {Reverse, Right,  Forward_FR, Left,  Forward_FL, Drop_Block, Turn_180_Left};
+Movement route7[] = {Reverse, Left,  Right,  Forward_FR, Drop_Block, Turn_180_Right};
+Movement route8[] = { Forward_FR, Right,  Left,  Left,  Block_Detection};
+Movement route9[] = { Forward_FL, Left,  Forward_FL, Right,  Left,  Block_Detection};
+Movement route10[] = {Reverse, Left,  Right,  Left,  Forward_FL, Drop_Block, Turn_180_Left};
+Movement route11[] = {Reverse, Left,  Left,  Forward_FR, Right,  Forward_FR, Drop_Block, Turn_180_Right};
+Movement route12[] = { Forward_FR, Forward_FR, Forward_FR, Right,  Block_Detection,  Forward_FR, Right,  Left,  Forward_FL, Right,  Right,  Block_Detection};
+Movement route13[] = { Forward_FL, Forward_FL, Left,  Block_Detection,  Forward_FL, Left,  Forward_FL, Right,  Forward_FL, Right,  Right,  Block_Detection};
+Movement route14[] = {Reverse, Right,  Forward_FL, Forward_FL, Forward_FL, Drop_Block, Turn_180_Left};
+Movement route15[] = {Reverse, Left,  Forward_FR, Forward_FR, Drop_Block, Turn_180_Right};
+Movement route16[] = { Right,  Forward_FL, Left, Reverse};
+Movement route17[] = { Left,  Right, Reverse};
+
+// Array of pointers to each route array for easier iteration
+Movement* routes[] = {route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, route12, route13, route14, route15, route16, route17};
+int routeSizes[] = {
+  sizeof(route1)/sizeof(route1[0]), sizeof(route2)/sizeof(route2[0]), sizeof(route3)/sizeof(route3[0]), 
+  sizeof(route4)/sizeof(route4[0]), sizeof(route5)/sizeof(route5[0]), sizeof(route6)/sizeof(route6[0]), 
+  sizeof(route7)/sizeof(route7[0]), sizeof(route8)/sizeof(route8[0]), sizeof(route9)/sizeof(route9[0]), 
+  sizeof(route10)/sizeof(route10[0]), sizeof(route11)/sizeof(route11[0]), sizeof(route12)/sizeof(route12[0]), 
+  sizeof(route13)/sizeof(route13[0]), sizeof(route14)/sizeof(route14[0]), sizeof(route15)/sizeof(route15[0]), 
+  sizeof(route16)/sizeof(route16[0]), sizeof(route17)/sizeof(route17[0])
+};
+
+
+
+
+
+
+
+// Track Route Completion
+bool routesCompleted[17] = {false}; // Tracks completion of all 17 routes
+
+
+
+
+
+
+
+//Execute Movement Function
+void executeMovement(Movement move) {
+  switch (move) {
+    case Reverse:
+      moveReverse();
+      break;
+    case Left:
+      turnLeft();
+      break;
+    case Right:
+      turnRight();
+      //right = true;
+      break;
+    case Forward_FR: // Assuming specific forward movements, adapt as necessary
+      moveForwardFR();
+      break;
+    case Forward_FL:
+      moveForwardFL();
+      break;
+    case Forward_RF:
+      moveForwardRF();
+      break;
+    case Turn_180_Left:
+      turn180Left();
+      break;
+    case Turn_180_Right:
+      turn180Right();
+      break;
+    case Block_Detection:
+      detectBlock();
+      break;
+    case Drop_Block:
+      dropBlock();
+      break;
+  }
+  
+}
+
+
+
+
+
+
+//Execute Route Function 
+// Assume executeMovement and related movement functions are defined as in previous steps
+
+void executeRoute(int routeIndex) {
+  Serial.print("Starting Route: ");
+  Serial.println(routeIndex + 1);
+  
+  for (int i = 0; i < routeSizes[routeIndex]; i++) {
+    Movement move = routes[routeIndex][i];
+    executeMovement(move); // Execute each movement in the route
+
+    // Implement route-specific logic if needed
+    if (move == Block_Detection) {
+      // Add logic for block detection, might involve sensor reading and conditional logic
+    } else if (move == Drop_Block) {
+      // Add logic for dropping the block, could involve actuator/servo control
+    }
+
+    // Add a delay or sensor check between movements if necessary
+    delay(500); // Example delay, adjust based on your robot's speed and task requirements
+  }
+
+  Serial.print("Completed Route: ");
+  Serial.println(routeIndex + 1);
+  routesCompleted[routeIndex] = true; // Mark the route as completed
+}
+
+
+
+
+
+
+
+
+//Main Logic with Initialization and Dynamic Route Transition
+void setup() {
+  Serial.begin(9600); // Initialize serial communication
+  // Initialize motors, sensors, etc.
+}
+
+void loop() {
+  
+  if (insideRoute == false){
+    // Execute routes sequentially, checking completion
+    if (currentRoute < sizeof(routes)) {
+      if (!routesCompleted[currentRoute]) {
+        //executeRoute(currentRoute); // Execute the current route
+        currentRoute++; // Proceed to the next route
+      }
+    } 
+    else {
+      Serial.println("All routes completed.");
+      delay(10000); // Halt further execution, or implement a reset mechanism
+    }
+  }
+  if (insideRoute == true){
+    if (indexInsideRoute == sizeof(routes[currentRoute])){
+      insideRoute = false;
+    }
+    else{
+      Movement move = routes[currentRoute][indexInsideRoute];
+      executeMovement(move); // Execute each movement in the route
+      indexInsideRoute ++;
+    }
+    
+  }
+  
+
+  // Add any continuous monitoring or additional tasks outside route execution
+}
