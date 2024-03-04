@@ -1,0 +1,242 @@
+#include <Wire.h>
+#include "Arduino.h"
+#include "DFRobot_VL53L0X.h"
+#include <Servo.h>;
+
+
+// ----------- Initialise TOF SENSOR VARS --------------------'
+
+DFRobot_VL53L0X sensor;//tof sensor
+//MINIMUM around 2 cm!!!
+
+//// For block pick up
+bool detect_block = false;//if route is to pick up and reached end
+//TO CALLIBRATE
+float grabber_distance = 2.5;//distance for grabber mechanism to pick up MIN 2.0
+float detection_offset_block = 3.0;
+////
+
+//// For block drop off
+bool detect_wall = true;//if route is to drop off and reached end
+//TO CALLIBRATE
+float wall_distance = 31.0;//where grabber will tigger release mechanism
+float detection_offset_wall = 8.0;
+
+// --------------------------------------------------------------
+
+// ----------- Initialise COLOUR SENSOR VARS --------------------
+
+#define IR 11 //colour sensor
+
+//COLOUR SENSOR DISTANCE CALLIBRATED
+float detection_distance = 8.0;//min distance colour sensor callibrated to detect black vs red at (can set with screwdriver)
+bool colour_read = false;//only if within distance should colour value be of significance
+bool red = true;//colour red or (if not) black
+
+// --------------------------------------------------------------
+
+
+// ----------- Initialise SERVOS VARS --------------------
+
+Servo beak_servo;
+Servo head_servo;
+
+
+int open_pos_beak_servo = 55; 
+int closed_pos_beak_servo = 0; 
+int up_pos_head_servo = 95; 
+int down_pos_head_servo = 0; 
+int down_pos_lifted_head_servo = 20;
+
+int beak_pos = 0;
+int head_pos = 0;
+
+// --------------------------------------------------------------
+
+
+// ----------- Initialise TEST VARS --------------------
+
+bool debug_grabber = true;//to initialise grabbers --> delay introduced before main loop (i.e 100s)
+
+// --------------------------------------------------------------
+
+
+
+void setup() {
+  //initialize serial communication at 9600 bits per second:
+  Serial.begin(9600);
+
+  pinMode(IR,INPUT);//colour sensor
+
+  //TOF sensor
+
+  //join i2c bus (address optional for master)
+  Wire.begin();
+  //Set I2C sub-device address
+  sensor.begin(0x50);
+  //Set to Back-to-back mode and high precision mode
+  sensor.setMode(sensor.eContinuous,sensor.eHigh);
+  //Laser rangefinder begins to work
+  sensor.start();
+
+
+  beak_servo.write(closed_pos_beak_servo);//start closed
+  beak_servo.attach(3);// callibrate pin.
+
+  
+  head_servo.write(up_pos_head_servo);//start up
+  head_servo.attach(9);// callibrate pin
+
+  delay(1000);
+  Serial.begin(9600);
+  Serial.println("test");
+
+  if (debug_grabber == true){
+    openBeak();
+    downHead();
+    closeBeak();
+    downLiftedHead();
+    upHead();
+    delay(100000);
+  }
+}
+
+
+
+void loop() {
+  // Get the distance in meters
+  float distance = sensor.getDistance()/10;// cm
+  
+
+  int colour_detected = digitalRead(IR);
+  delay(400);
+
+  
+
+  
+  if (detect_block == true){
+    distance = distance - detection_offset_block;//offset in sensor (in built dont change)
+    if (distance <= detection_distance){
+      colour_read = true;
+      if(colour_detected == 1){
+        red = true;
+      }
+      else if (colour_detected == 0){
+        red = false;
+      }
+      if(red == true && colour_read == true){
+        Serial.println("RED");
+      }
+      else if (red == false && colour_read == true){
+        Serial.println("BLACK");
+      }
+      delay(300);
+    }
+    
+    
+
+    // Check if the distance is smaller than grabber distance
+    if (distance < grabber_distance) {
+      Serial.println("In range to pick up.");
+
+      ////TEST
+      openBeak();
+      downHead();
+      closeBeak();
+      downLiftedHead();
+      ////TEST
+
+      delay(10000);
+    }
+  }
+
+  else if (detect_wall){
+    distance = distance - detection_offset_wall;//offset in sensor (based on if sensor 100% vertical)
+    // Check if the distance is smaller than dropping off distance
+    if (distance < wall_distance) {
+      Serial.println("In range to drop off.");
+
+      ////TEST
+      downHead();
+      openBeak();
+      upHead();
+      ////TEST
+
+      //NEED to add forward motor for like 1 second.
+
+
+      delay(10000);
+    }
+  }
+
+  Serial.println("distance");
+  Serial.println(distance);
+  
+
+  //
+}
+
+
+void openBeak() { 
+  delay(2000);
+  int pos;
+  
+  for (pos = beak_pos; pos <= open_pos_beak_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+    beak_servo.write(pos); // tell servo to go to position
+    delay(15); // waits 15 ms for the servo to reach the position 
+  }
+  beak_pos = open_pos_beak_servo;
+}
+
+
+void closeBeak() { 
+  delay(2000);
+  int pos;
+
+  for (pos = beak_pos; pos >= closed_pos_beak_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+    beak_servo.write(pos); // tell servo to go to position
+    delay(15); // waits 15 ms for the servo to reach the position 
+  }
+  beak_pos = closed_pos_beak_servo;
+}
+
+void downHead() { 
+  delay(2000);
+  int pos;
+
+  for (pos = head_pos; pos >= down_pos_head_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+    beak_servo.write(pos); // tell servo to go to position
+    delay(15); // waits 15 ms for the servo to reach the position 
+  }
+  head_pos = down_pos_head_servo;
+}
+
+void downLiftedHead() { 
+  delay(2000);
+  int pos;
+
+  if (head_pos == down_pos_head_servo) {
+    for (pos = head_pos; pos <= down_pos_lifted_head_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+      beak_servo.write(pos); // tell servo to go to position
+      delay(15); // waits 15 ms for the servo to reach the position 
+    }
+  }
+  else if (head_pos == up_pos_head_servo) {
+    for (pos = head_pos; pos >= down_pos_lifted_head_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+      beak_servo.write(pos); // tell servo to go to position
+      delay(15); // waits 15 ms for the servo to reach the position 
+    }
+  }
+  head_pos = down_pos_lifted_head_servo;
+}
+  
+void upHead() { 
+  delay(2000);
+  int pos;
+  
+  for (pos = head_pos; pos <= up_pos_head_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+    beak_servo.write(pos); // tell servo to go to position
+    delay(15); // waits 15 ms for the servo to reach the position 
+  }
+  head_pos = up_pos_head_servo;
+}
