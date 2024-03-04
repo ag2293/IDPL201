@@ -9,7 +9,7 @@ enum Movement {
 - remove any forward commands in route --> forward is intrinsic except at a junction
 - double check route
 - check 180 degree which way --> also might need to set left or right and detect junction to true outside of line sensor check and then set to false (maybe have var called turn_180)
-
+- 
 */
 
 //define if within a route
