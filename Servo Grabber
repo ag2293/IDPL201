@@ -1,0 +1,20 @@
+#include <Servo.h>
+
+Servo myservo;  // create servo object to control a servo
+
+// Define servo positions for open and closed states
+int openPosition = 0;   // Adjust this value to match your servo's open position
+int closePosition = 180; // Adjust this value to match your servo's closed position
+
+void setup() {
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo.write(openPosition); // Start with the grabber open
+  delay(1000); // Wait for 1 second
+}
+
+void loop() {
+  myservo.write(closePosition); // turn the servo to the close position
+  delay(1000); // wait for 1 second
+  myservo.write(openPosition); // turn the servo to the open position
+  delay(1000); // wait for 1 second
+}
