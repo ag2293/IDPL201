@@ -1,0 +1,27 @@
+void moveForwardForTime(unsigned long timeInMilliseconds) {
+  Serial.println("Moving forwards...");
+  isMoving = true; // Start moving
+  leftMotor->setSpeed(motorSpeed);
+  rightMotor->setSpeed(motorSpeed);
+  leftMotor->run(BACKWARD);
+  rightMotor->run(BACKWARD);
+  delay(timeInMilliseconds); // Move forward for the specified time
+  leftMotor->setSpeed(0); // Stop the motors after the delay
+  rightMotor->setSpeed(0);
+  isMoving = false; // Stop moving
+  Serial.println("Stop");
+}
+
+void moveBackwardForTime(unsigned long timeInMilliseconds) {
+  Serial.println("Moving backwards...");
+  isMoving = true; // Start moving
+  leftMotor->setSpeed(reverseMotorSpeed);
+  rightMotor->setSpeed(reverseMotorSpeed);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
+  delay(timeInMilliseconds); // Move backward for the specified time
+  leftMotor->setSpeed(0); // Stop the motors after the delay
+  rightMotor->setSpeed(0);
+  isMoving = false; // Stop moving
+  Serial.println("Stop");
+}
