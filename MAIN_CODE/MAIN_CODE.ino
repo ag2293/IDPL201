@@ -23,10 +23,10 @@ bool LED = false;
 */
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=2; // left line sensor
-int right_line_sensor_pin=13; // right line sensor
-int front_left_line_sensor_pin =4; // sensor on line at front
-int front_right_line_sensor_pin =11; // sensor on line at back
+int left_line_sensor_pin=3; // left line sensor
+int right_line_sensor_pin=11; // right line sensor
+int front_left_line_sensor_pin =2; // sensor on line at front
+int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
 // -----Junction INITILIASATION-------
 bool at_T_junction = false;// can only go left or right
@@ -121,12 +121,13 @@ float detection_offset_wall = 8.0;
 
 // ----------- Initialise COLOUR SENSOR VARS --------------------
 
-#define IR 13 //colour sensor
+#define IR 12 //colour sensor
 
 //COLOUR SENSOR DISTANCE CALLIBRATED
 float detection_distance = 8.0;//min distance colour sensor callibrated to detect black vs red at (can set with screwdriver)
 bool colour_read = false;//only if within distance should colour value be of significance
-bool red = true;//colour red or (if not) black
+bool red = false;//colour red or (if not) black
+bool black = false;//colour red or (if not) black
 
 // --------------------------------------------------------------
 
@@ -197,7 +198,7 @@ void setup() {
 
   
   head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
-  head_servo.attach(4);// callibrate pin
+  head_servo.attach(10);// callibrate pin
   head_pos = up_pos_head_servo;
 
   delay(1000);
@@ -234,7 +235,7 @@ void loop() {
     } 
     else {
       //try this code
-      int index = currentRoute/2;
+      int index = (currentRoute+1)/2;
       tasks_completed[index] = true;
 
       //else this code
@@ -267,7 +268,16 @@ void loop() {
         tasks_completed[8] = true;
       }
       */
-      currentRoute ++;
+      if (currentRoute == 0 ){
+        currentRoute ++;
+      }
+      else if (black == true){
+        currentRoute = (2*index - 1);//green route
+      }
+      else if (red == true){
+        currentRoute = (2*index - 1) + 1;//green route
+      }
+      
     }
   }
   if (insideRoute == true && set_next_action == true){
@@ -504,12 +514,12 @@ void grabber() {
         red = true;
       }
       else if (colour_detected == 0){
-        red = false;
+        black = true;
       }
       if(red == true && colour_read == true){
         Serial.println("RED");
       }
-      else if (red == false && colour_read == true){
+      else if (black == true && colour_read == true){
         Serial.println("BLACK");
       }
       delay(300);
@@ -559,6 +569,8 @@ void grabber() {
 
       detect_wall = false;
       set_next_action = true;
+      red = false;
+      black = false;
     }
   }
 
