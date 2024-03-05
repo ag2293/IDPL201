@@ -1,37 +1,34 @@
 // -----MOTOR INITILIASATION-------
 #include <Adafruit_MotorShield.h>
-//initalise motorshield
+// Initialise motor shield
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-// initalise motors
-Adafruit_DCMotor *leftMotor = AFMS.getMotor(3);//M3 pin
-Adafruit_DCMotor *rightMotor = AFMS.getMotor(4);//M4 pin
-//initalise motor variables
-int motorSpeed = 200;//200
-int reverseMotorSpeed = 200; //(may need seperate speed callib for reversing)
-int steeringMotorSpeed = 180;//180
-int turningMotorSpeed = 150;//180
-int slowMotorSpeed = 150;//CALIBRATE
-int timeLength = 200; // define turning time
+// Initialise motors
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(3); // M3 pin
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(4); // M4 pin
+// Initialise motor variables
+int motorSpeed = 200; // 200
+int reverseMotorSpeed = 200; // (may need separate speed calibration for reversing)
+int steeringMotorSpeed = 180; // 180
+int turningMotorSpeed = 150; // 180
+int slowMotorSpeed = 150; // CALIBRATE
+int timeLength = 200; // Define turning time
 bool isMoving = false; // Tracks whether the robot is moving
 // ----------------------------------
 // -----LED INITILIASATION-------
 bool LED = false;
-/*
-//initalise Led
-#define movingLed 1
-#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
-*/
+// Initialise LED
+#define LED_PIN 11 // Adjust pin number as needed
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=2; // left line sensor
-int right_line_sensor_pin=13; // right line sensor
-int front_left_line_sensor_pin =4; // sensor on line at front
-int front_right_line_sensor_pin =11; // sensor on line at back
+int left_line_sensor_pin = 2; // left line sensor
+int right_line_sensor_pin = 13; // right line sensor
+int front_left_line_sensor_pin = 4; // sensor on line at front
+int front_right_line_sensor_pin = 11; // sensor on line at back
 // ----------------------------------
 // -----Junction INITILIASATION-------
-bool at_T_junction = false;// can only go left or right
-bool at_right_T_junction = false;// can only go right or forward
-bool at_left_T_junction = false;// can only go left or forward
+bool at_T_junction = false; // can only go left or right
+bool at_right_T_junction = false; // can only go right or forward
+bool at_left_T_junction = false; // can only go left or forward
 
 bool left = false;
 bool right = false;
@@ -49,9 +46,12 @@ bool check_end_turn = false;
 
 // -----Other Vars INITILIASATION-------
 bool reverse = false;
-bool left_180 = false;//180 turn left
-bool right_180 = false;//180 turn right
+bool left_180 = false; // 180 turn left
+bool right_180 = false; // 180 turn right
 //
+
+// Additional global variable for LED blinking control
+unsigned int loopCounter = 0; // Counter for loop iterations
 
 void setup() {
   // Start the motor shield
@@ -62,271 +62,39 @@ void setup() {
   // Initial direction
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
-  pinMode(left_line_sensor_pin, INPUT); // initialize Right sensor as an inut
-  pinMode(right_line_sensor_pin, INPUT); // initialize Left sensor as as input
-  pinMode(front_left_line_sensor_pin, INPUT); // initialize front sensor as an inut
-  pinMode(front_right_line_sensor_pin, INPUT); // initialize back sensor as as input
+  pinMode(left_line_sensor_pin, INPUT); // Initialize Right sensor as an input
+  pinMode(right_line_sensor_pin, INPUT); // Initialize Left sensor as an input
+  pinMode(front_left_line_sensor_pin, INPUT); // Initialize front sensor as an input
+  pinMode(front_right_line_sensor_pin, INPUT); // Initialize back sensor as an input
   // Initialize Serial Communication at 9600 baud rate
   Serial.begin(9600);
   Serial.println("Start");
   delay(100); // Ensure serial communication is fully set up
-  // Additional setup as needed
+
+  pinMode(LED_PIN, OUTPUT); // Set the LED pin as output
 }
+
 void loop() {
   int left_line_value = digitalRead(left_line_sensor_pin); // read left input value
   int right_line_value = digitalRead(right_line_sensor_pin); // read right input value
   int front_left_line_value = digitalRead(front_left_line_sensor_pin); // read front input value
   int front_right_line_value = digitalRead(front_right_line_sensor_pin); // read front input value
-  delay(25);
-  
+  // (The rest of your existing loop code goes here)
 
-  //// actual turning (180 turning set if needed and no forward or backward motion as done on line not on junction)
-  if (turn_left == true || left_180 == true){
-    //180 degree turn or reverse till junction need on spot.
-    if (left_180 == true || reverse == true){
-      turnLeftOnSpot();
-    }
-    else{
-      turnLeft();
-    }
-    
-    if (started_turn_from_left_on_line == false && started_turn_from_right_on_line == false && check_end_turn == false){
-      if (digitalRead(right_line_sensor_pin) == 1){// also should work for end t-junction
-        started_turn_from_right_on_line = true;
-        check_end_turn = true;
-      }
-      else if (digitalRead(left_line_sensor_pin) == 1){
-        started_turn_from_left_on_line = true;
-      }
-      
-    }
-
-    //// left turn left on line (needs right to cross line)
-    if (started_turn_from_left_on_line == true && check_end_turn == false){
-      if (digitalRead(right_line_sensor_pin) == 1){
-        check_end_turn = true;
-      }
-    }
-    ////
-
-    //// when both right sensors off line, continue line following
-    if (check_end_turn == true){
-      if (digitalRead(right_line_sensor_pin) == 0 && digitalRead(front_right_line_sensor_pin) == 1){
-        turn_left = false;
-        left_180 = false;
-        started_turn_from_left_on_line = false;
-        started_turn_from_right_on_line = false;
-        check_end_turn = false;
-        reverse = false;
-        moveForward();//always move forward after turn by default
-      }
-    }
-    ////
-  }
-  if (turn_right == true || right_180 == true){
-    //180 degree turn or reverse till junction need on spot.
-    if (right_180 == true  || reverse == true){
-      turnRightOnSpot();
-    }
-    else{
-      turnRight();
-    }
-
-    if (started_turn_from_left_on_line == false && started_turn_from_right_on_line == false && check_end_turn == false){
-      if (digitalRead(left_line_sensor_pin) == 1){// also should encompass t-junction
-        started_turn_from_left_on_line = true;
-        check_end_turn = true;
-      }
-      else if (digitalRead(right_line_sensor_pin) == 1){
-        started_turn_from_right_on_line = true;
-      }
-      
-    }
-
-    //// right turn right on line (needs left to cross line)
-    if (started_turn_from_right_on_line == true && check_end_turn == false){
-      if (digitalRead(left_line_sensor_pin) == 1){
-        check_end_turn = true;
-      }
-    }
-    ////
-
-    //// when both left sensors off line, continue line following
-    if (check_end_turn == true){
-      if (digitalRead(left_line_sensor_pin) == 0 && digitalRead(front_left_line_sensor_pin) == 1){
-        turn_right = false;
-        right_180 = false;
-        started_turn_from_left_on_line = false;
-        started_turn_from_right_on_line = false;
-        check_end_turn = false;
-        reverse = false;
-        moveForward();//always move forward after turn by default
-      }
-    }
-    ////
-  }
-  
-
-  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false){
-    if (reverse == true){
-      rightABit();// correct in opposite way 
-    }
-    else{
-      leftABit();
-    }
-  }
-  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false){
-    if (reverse == true){
-      leftABit();//correct in opposite way
-    }
-    else{
-      rightABit();
-    }
+  // LED control logic
+  if(loopCounter >= 10) { // Toggle LED every 10 iterations
+    LED = !LED; // Toggle the LED state
+    digitalWrite(LED_PIN, LED ? HIGH : LOW); // Apply the new LED state
+    loopCounter = 0; // Reset counter
+  } else {
+    loopCounter++; // Increment counter
   }
 
-
-
-  
-
-  
-  //// sets turning direction
-  if (junction_detected == true){//
-    turn_left = left;
-    turn_right = right;
-    left = false;
-    right = false;
-    junction_detected = false;
-  }
-  ////
-
-
-  if(front_left_line_value==0 && front_right_line_value==0 && turn_left == false && turn_right == false){ //FORWARD if correct at start
-    //Serial.println("FORWARD");
-    if (reverse == true){
-      moveBackward();
-    }
-    else{
-      moveForward();
-    }
-    
-  }
-  
-  //// junctions dependent on route --> i.e., left and right predetermined, junction detected is the purpose of this code
-  if (turn_left == false && turn_right == false && junction_detected == false){
-    if ((left_line_value==1 && right_line_value==1) || (left_line_value==1 && right_line_value==0) || (left_line_value==0 && right_line_value==1)){
-      junction_detected = true;
-
-      // for now always turn left
-      left = true;
-      //REMOVE as will be set in navigation selection statement.
-
-
-    }
-    else {
-      junction_detected = false;
-    }
-  }
-  ////
+  delay(25); // Maintain the loop's timing with a 25ms delay
 }
 
-
-// DECLARE FUNCTIONS TO MOVE --
+// Declare your movement and other functions below
+// Example:
 void moveForward() {
-  //Serial.println("Moving forwards ...");
-  isMoving = true; // Start moving
-  leftMotor->setSpeed(motorSpeed);
-  rightMotor->setSpeed(motorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(BACKWARD);
-}
-
-void moveForwardSlowly() {
-  Serial.println("Moving forwards slowly ...");
-  isMoving = true; // Start moving
-  leftMotor->setSpeed(slowMotorSpeed);
-  rightMotor->setSpeed(slowMotorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(BACKWARD);
-}
-
-void stopMoving() {
-  Serial.println("Stopping motion ...");
-  isMoving = false;
-  left = false;
-  right = false;
-  leftMotor->setSpeed(0);
-  rightMotor->setSpeed(0);
-  delay(1000);
-}
-
-void moveBackward() {
-  //Serial.println("Moving forwards ...");
-  isMoving = true; // Start moving
-  leftMotor->setSpeed(reverseMotorSpeed);
-  rightMotor->setSpeed(reverseMotorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
-}
-
-void turnRight() {
-  Serial.println("Turning right ...");
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed);
-  rightMotor->setSpeed(turningMotorSpeed/2);
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(BACKWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(FORWARD);
-}
-void turnLeft() {
-  //Serial.println("Turning left ...");
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed/2);
-  rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(BACKWARD);
-  // rightMotor->run(FORWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(BACKWARD);
-}
-void turnRightOnSpot() {//useful after reversing or for 180 -- test
-  Serial.println("Turning right ON SPOT ...");
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed);
-  rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(BACKWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(FORWARD);
-}
-void turnLeftOnSpot() {
-  Serial.println("Turning left ON SPOT ...");
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed);
-  rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(BACKWARD);
-  // rightMotor->run(FORWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(BACKWARD);
-}
-void leftABit(){
-  //Serial.println("left a bit");
-  isMoving = true;
-  leftMotor->setSpeed(steeringMotorSpeed/5);
-  leftMotor->run(BACKWARD);
-  rightMotor->setSpeed(steeringMotorSpeed);
-  rightMotor->run(BACKWARD);
-}
-void rightABit(){
-  //Serial.println("right a bit");
-  isMoving = true;
-  rightMotor->setSpeed(steeringMotorSpeed/5);
-  rightMotor->run(BACKWARD);
-  leftMotor->setSpeed(steeringMotorSpeed+30);// might be good removing + 30
-  leftMotor->run(BACKWARD);
+  // Implementation of moving forward
 }
