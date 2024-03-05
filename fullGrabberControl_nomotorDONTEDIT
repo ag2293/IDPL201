@@ -12,7 +12,7 @@ DFRobot_VL53L0X sensor;//tof sensor
 //// For block pick up
 bool detect_block = true;//if route is to pick up and reached end
 //TO CALLIBRATE
-float grabber_distance = 2.5;//distance for grabber mechanism to pick up MIN 2.0
+float grabber_distance = 3.5;//distance for grabber mechanism to pick up MIN 2.0
 float detection_offset_block = 3.0;
 ////
 
@@ -26,7 +26,7 @@ float detection_offset_wall = 8.0;
 
 // ----------- Initialise COLOUR SENSOR VARS --------------------
 
-#define IR 13 //colour sensor
+#define IR 12 //colour sensor
 
 //COLOUR SENSOR DISTANCE CALLIBRATED
 float detection_distance = 8.0;//min distance colour sensor callibrated to detect black vs red at (can set with screwdriver)
@@ -85,10 +85,11 @@ void setup() {
   beak_servo.attach(8);// callibrate pin.
   beak_pos = closed_pos_beak_servo;
 
-  
-  head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
-  head_servo.attach(4);// callibrate pin
-  head_pos = up_pos_head_servo;
+  delay(2000);
+
+  head_servo.write(down_pos_head_servo);//start up ensure in up already else will jerk at begining
+  head_servo.attach(3);// callibrate pin
+  head_pos = down_pos_head_servo;
 
   delay(1000);
   Serial.begin(9600);
