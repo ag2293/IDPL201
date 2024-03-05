@@ -45,6 +45,8 @@ bool right_180 = false;//180 turn right
 bool detect_wall = false;
 bool detect_block = false;
 
+bool set_next_action = true;// set to true after turn, block pick up, block drop off, when reverse is set to false from true (i.e., in the turn code)
+
 
 //Main Logic with Initialization and Dynamic Route Transition
 void setup() {
@@ -53,6 +55,11 @@ void setup() {
 }
 
 void loop() {
+
+  // for testing sake, remove in actual
+  set_next_action = true;
+  //
+
   
   if (insideRoute == false){
     
@@ -60,6 +67,7 @@ void loop() {
     if (tasks_completed == all_tasks_completed) {
       //STOP MOVING AND DELAY
       Serial.println("All routes completed.");
+      // trigger reverseFORSETTIME function
     } 
     else {
       //try this code
@@ -99,7 +107,8 @@ void loop() {
       currentRoute ++;
     }
   }
-  if (insideRoute == true){
+  if (insideRoute == true && set_next_action == true){
+    set_next_action = false;
     
     
     String action = routes[currentRoute][indexInsideRoute];
@@ -143,4 +152,6 @@ void loop() {
     
   }
   
+
+  // Add any continuous monitoring or additional tasks outside route execution
 }
