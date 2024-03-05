@@ -469,9 +469,6 @@ void loop() {
       if (reverse == true){
         set_next_action = true;
       }
-      // for now always turn left
-      left = true;
-      //REMOVE as will be set in navigation selection statement.
 
 
     }
