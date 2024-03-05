@@ -23,10 +23,10 @@ bool LED = false;
 */
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=2; // left line sensor
-int right_line_sensor_pin=13; // right line sensor
-int front_left_line_sensor_pin =4; // sensor on line at front
-int front_right_line_sensor_pin =11; // sensor on line at back
+int left_line_sensor_pin=10; // left line sensor
+int right_line_sensor_pin=11; // right line sensor
+int front_left_line_sensor_pin =2; // sensor on line at front
+int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
 // -----Junction INITILIASATION-------
 bool at_T_junction = false;// can only go left or right
