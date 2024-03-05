@@ -7,7 +7,7 @@
 // ----------- Initialise TOF SENSOR VARS --------------------'
 
 DFRobot_VL53L0X sensor;//tof sensor
-//MINIMUM around 3 cm!!! realistically within pick up range is about 3-4 cm.
+//MINIMUM around 2 cm!!!
 
 //// For block pick up
 bool detect_block = true;//if route is to pick up and reached end
@@ -58,9 +58,10 @@ int head_pos = 0;
 
 bool debug_grabber = false;//to initialise grabbers --> delay introduced before main loop (i.e 100s)
 
+
 // --------------------------------------------------------------
 
-
+bool set_next_action = true;
 
 void setup() {
   //initialize serial communication at 9600 bits per second:
@@ -158,6 +159,7 @@ void loop() {
 
       delay(10000);
       detect_block = false;
+      set_next_action = true;
     }
   }
 
@@ -181,6 +183,7 @@ void loop() {
       delay(10000);
 
       detect_wall = false;
+      set_next_action = true;
     }
   }
 
@@ -243,7 +246,6 @@ void downLiftedHead() {
   }
   head_pos = down_pos_lifted_head_servo;
 }
-  
 void upHead() { 
   delay(2000);
   int pos;
