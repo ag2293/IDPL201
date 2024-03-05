@@ -1,0 +1,112 @@
+//define if within a route
+bool insideRoute = false;
+
+int currentRoute = 0; // Tracks the current route
+int indexInsideRoute = 0; //tracks within
+
+
+
+
+// Define routes 
+String pick_up_1[3] = {"Left", "Right", "Block_Detection"};// START to pickup 1
+String drop_off_1_green[5] = {"Reverse", "Left", "Left", "Drop_Block", "Turn_180_Left"};// pick up 1 to green
+String drop_off_1_red[6] = {"Reverse", "Right", "Forward_FR", "Right", "Drop_Block", "Turn_180_Right"};//pick up 1 to red
+String pick_up_2_green[6] = {"Turn_180_Left", "Forward_RF", "Right", "Forward_FL", "Right", "Block_Detection"};// green to 2
+String pick_up_2_red[4] = {"Forward_FL", "Left", "Left", "Block_Detection"};//red to 2
+String drop_off_2_green[7] = {"Reverse", "Right", "Forward_FR", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 2 to green
+String drop_off_2_red[6] = {"Reverse", "Left", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 2 to red
+String pick_up_3_green[5] = {"Forward_FR", "Right", "Left", "Left", "Block_Detection"};// green to 3
+String pick_up_3_red[6] = {"Forward_FL", "Left", "Forward_FL", "Right", "Left", "Block_Detection"};// red to 3
+String drop_off_3_green[7] = {"Reverse", "Left", "Right", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 3 to green
+String drop_off_3_red[8] = {"Reverse", "Left", "Left", "Forward_FR", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 3 to red
+String pick_up_4_green[12] = {"Forward_FR", "Forward_FR", "Forward_FR", "Right", "Block_Detection", "Forward_FR", "Right", "Left", "Forward_FL", "Right", "Right", "Block_Detection"};// green to 4
+String pick_up_4_red[12] = {"Forward_FL", "Forward_FL", "Left", "Block_Detection", "Forward_FL", "Left", "Forward_FL", "Right", "Forward_FL", "Right", "Right", "Block_Detection"};// red to 4
+String drop_off_4_green[7] = {"Reverse", "Right", "Forward_FL", "Forward_FL", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 4 to green
+String drop_off_4_red[6] = {"Reverse", "Left", "Forward_FR", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 4 to red
+String return_to_start_green[4] = {"Right", "Forward_FL", "Left", "Reverse"};// green to Start
+String return_to_start_red[3] = {"Left", "Right", "Reverse"};// red to Start
+
+// Array of pointers to each route array for easier iteration
+String *routes[17] = {pick_up_1, drop_off_1_green, drop_off_1_red, pick_up_2_green, pick_up_2_red, drop_off_2_green, drop_off_2_red, pick_up_3_green, pick_up_3_red, drop_off_3_green, drop_off_3_red, pick_up_4_green, pick_up_4_red, drop_off_4_green, drop_off_4_red, return_to_start_green, return_to_start_red};
+int routeSizes[17] = {3, 5, 6, 6, 4, 7, 6, 5, 6, 7, 8, 12, 12, 7, 6, 4, 3};
+
+//pick_up_1, drop_off_1, pick_up_2, drop_off_2, pick_up_3, drop_off_3, pick_up_4, drop_off_4, return_to_start
+bool tasks_completed[9] = {false, false, false, false, false, false, false, false, false};
+const bool all_tasks_completed[9] = {false, false, false, false, false, false, false, false, false};
+
+
+
+
+bool left = false;
+bool right = false;
+bool reverse = false;
+bool left_180 = false;//180 turn left
+bool right_180 = false;//180 turn right
+bool detect_wall = false;
+bool detect_block = false;
+
+
+//Main Logic with Initialization and Dynamic Route Transition
+void setup() {
+  Serial.begin(9600); // Initialize serial communication
+  // Initialize motors, sensors, etc.
+}
+
+void loop() {
+  
+  if (insideRoute == false){
+    
+    // Execute routes sequentially, checking completion
+    if (tasks_completed == all_tasks_completed) {
+      //STOP MOVING AND DELAY
+      Serial.println("All routes completed.");
+    } 
+    else {
+      currentRoute ++;
+    }
+  }
+  if (insideRoute == true){
+    
+    
+    String action = routes[currentRoute][indexInsideRoute];
+
+    if (action == "Left"){
+      left = true;
+    }
+    else if (action == "Right"){
+      right = true;
+    }
+    else if (action == "Forward_FL"){
+      left = false;//should just skip junction
+    }
+    else if (action == "Forward_FR"){
+      right = false;//should just skip junction
+    }
+    else if (action == "Reverse"){
+      reverse = true;
+    }
+    else if (action == "Turn_180_Left"){
+      left_180 = true;
+    }
+    else if (action == "Turn_180_Right"){
+      right_180 = true;
+    }
+    else if (action == "Drop_Block"){
+      detect_wall = true;
+    }
+    else if (action == "Block_Detection"){
+      detect_block = true;
+    }
+
+
+
+
+    if (indexInsideRoute + 1 == routeSizes[currentRoute]){//on last task of route
+      insideRoute = false;
+      Serial.println("Finished route");
+    }
+    indexInsideRoute ++;
+    
+  }
+  
+}
