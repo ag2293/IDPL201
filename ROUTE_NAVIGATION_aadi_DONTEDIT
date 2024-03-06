@@ -1,5 +1,5 @@
 //define if within a route
-bool insideRoute = false;
+bool insideRoute = true;
 
 int currentRoute = 0; // Tracks the current route
 int indexInsideRoute = 0; //tracks within
@@ -32,7 +32,10 @@ int routeSizes[17] = {3, 5, 6, 6, 4, 7, 6, 5, 6, 7, 8, 12, 12, 7, 6, 4, 3};
 
 //pick_up_1, drop_off_1, pick_up_2, drop_off_2, pick_up_3, drop_off_3, pick_up_4, drop_off_4, return_to_start
 bool tasks_completed[9] = {false, false, false, false, false, false, false, false, false};
-const bool all_tasks_completed[9] = {true, true, true, true, true, true, true, true, true};
+const bool all_tasks_completed[9] = {1,1,1,1,1,1,1,1,1};
+
+bool red = true;//colour red or (if not) black
+bool black = false;//colour red or (if not) black
 
 
 
@@ -51,6 +54,8 @@ bool set_next_action = true;// set to true after turn, block pick up, block drop
 //Main Logic with Initialization and Dynamic Route Transition
 void setup() {
   Serial.begin(9600); // Initialize serial communication
+  Serial.println("");
+  Serial.println("STARTING ...");
   // Initialize motors, sensors, etc.
 }
 
@@ -58,21 +63,28 @@ void loop() {
 
   // for testing sake, remove in actual
   set_next_action = true;
+  delay(1000);
   //
 
   
   if (insideRoute == false){
+    //Serial.println("HELOO");
     
     // Execute routes sequentially, checking completion
     if (tasks_completed == all_tasks_completed) {
       //STOP MOVING AND DELAY
+      Serial.println("");
       Serial.println("All routes completed.");
+      Serial.println("");
+      delay(100000);
       // trigger reverseFORSETTIME function
     } 
     else {
       //try this code
-      int index = currentRoute/2;
+      int index = (currentRoute+1)/2;
       tasks_completed[index] = true;
+
+      Serial.println(tasks_completed[index]);
 
       //else this code
       /*
@@ -104,7 +116,16 @@ void loop() {
         tasks_completed[8] = true;
       }
       */
-      currentRoute ++;
+      
+      if (black == true){
+        currentRoute = (2*index + 1);//green route
+      }
+      else if (red == true){
+        currentRoute = (2*index + 2);//green route
+      }
+      insideRoute = true;
+      indexInsideRoute = 0;
+      Serial.println(currentRoute);
     }
   }
   if (insideRoute == true && set_next_action == true){
@@ -112,6 +133,7 @@ void loop() {
     
     
     String action = routes[currentRoute][indexInsideRoute];
+    Serial.println(action);
 
     if (action == "Left"){
       left = true;
@@ -147,6 +169,7 @@ void loop() {
     if (indexInsideRoute + 1 == routeSizes[currentRoute]){//on last task of route
       insideRoute = false;
       Serial.println("Finished route");
+      Serial.println("");
     }
     indexInsideRoute ++;
     
@@ -154,4 +177,4 @@ void loop() {
   
 
   // Add any continuous monitoring or additional tasks outside route execution
-}
+} 
