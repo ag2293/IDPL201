@@ -23,8 +23,8 @@ bool LED = false;
 */
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=3; // left line sensor
-int right_line_sensor_pin=11; // right line sensor
+int left_line_sensor_pin=10; // left line sensor
+int right_line_sensor_pin=4; // right line sensor
 int front_left_line_sensor_pin =2; // sensor on line at front
 int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
@@ -194,15 +194,16 @@ void setup() {
 
   beak_servo.write(closed_pos_beak_servo);//start closed
   beak_servo.attach(8);// callibrate pin.
+  pinMode(beak_servo, OUTPUT);
   beak_pos = closed_pos_beak_servo;
 
   
   head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
-  head_servo.attach(10);// callibrate pin
+  head_servo.attach(3);// callibrate pin
+  pinMode(head_servo, OUTPUT);
   head_pos = up_pos_head_servo;
 
   delay(1000);
-  Serial.begin(9600);
   Serial.println("test");
 
   upHead();
