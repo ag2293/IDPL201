@@ -14,13 +14,20 @@ int slowMotorSpeed = 150;//CALIBRATE
 int timeLength = 200; // define turning time
 bool isMoving = false; // Tracks whether the robot is moving
 // ----------------------------------
-// -----LED INITILIASATION-------
-bool LED = false;
-/*
+// -----LED and BUTTON INITILIASATION-------
+
 //initalise Led
-#define movingLed 1
-#define BLUE_LED_PIN 11 // Replace x with the actual pin number for the blue LED
-*/
+
+int button_pin = 11;
+bool start = false;
+
+int RED_LED = 6;
+int GREEN_LED = 9;
+int BLUE_LED = 7;
+
+bool LED = false;
+int loopCounter = 0;
+
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
 int left_line_sensor_pin=10; // left line sensor
@@ -64,8 +71,8 @@ String pick_up_4_green[12] = {"Forward_FR", "Forward_FR", "Forward_FR", "Right",
 String pick_up_4_red[12] = {"Forward_FL", "Forward_FL", "Left", "Block_Detection", "Forward_FL", "Left", "Forward_FL", "Right", "Forward_FL", "Right", "Right", "Block_Detection"};// red to 4
 String drop_off_4_green[7] = {"Reverse", "Right", "Forward_FL", "Forward_FL", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 4 to green
 String drop_off_4_red[6] = {"Reverse", "Left", "Forward_FR", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 4 to red
-String return_to_start_green[4] = {"Right", "Forward_FL", "Left", "Reverse"};// green to Start
-String return_to_start_red[3] = {"Left", "Right", "Reverse"};// red to Start
+String return_to_start_green[4] = {"Right", "Forward_FL", "Right", "Turn_180_END"};// green to Start
+String return_to_start_red[3] = {"Left", "Left", "Turn_180_END"};// red to Start
 
 // Array of pointers to each route array for easier iteration
 String *routes[17] = {pick_up_1, drop_off_1_green, drop_off_1_red, pick_up_2_green, pick_up_2_red, drop_off_2_green, drop_off_2_red, pick_up_3_green, pick_up_3_red, drop_off_3_green, drop_off_3_red, pick_up_4_green, pick_up_4_red, drop_off_4_green, drop_off_4_red, return_to_start_green, return_to_start_red};
@@ -158,8 +165,35 @@ bool debug_grabber = false;//to initialise grabbers --> delay introduced before 
 // --------------------------------------------------------------
 
 
+//---------------------------------
+void(* resetFunc) (void) = 0; //  claim the position --> ISSUE
+
+
+void IRS(){
+  Serial.println("RESET");//have to reopen serial comms to see.
+  resetFunc();
+}
 
 void setup() {
+
+  pinMode(button_pin, INPUT_PULLDOWN); // initialize front right sensor as as input (will still 0 for nothing 1 for on.)
+  
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+
+  // Initialize Serial Communication at 9600 baud rate
+  Serial.begin(9600);
+  delay(1000); // Ensure serial communication is fully set up
+  while (!start) {
+    start=digitalRead(button_pin);
+    Serial.println("Waiting to start");
+  }
+  Serial.println("Start");
+  delay(2000);
+  attachInterrupt(digitalPinToInterrupt(button_pin), IRS, CHANGE);
+
+
   // Start the motor shield
   AFMS.begin();
   // Set initial motor speed to 0
@@ -173,10 +207,6 @@ void setup() {
   pinMode(front_left_line_sensor_pin, INPUT); // initialize front sensor as an inut
   pinMode(front_right_line_sensor_pin, INPUT); // initialize back sensor as as input
   // Initialize Serial Communication at 9600 baud rate
-  Serial.begin(9600);
-  Serial.println("Start");
-  delay(100); // Ensure serial communication is fully set up
-  // Additional setup as needed
 
   pinMode(IR,INPUT);//colour sensor
 
@@ -194,17 +224,15 @@ void setup() {
 
   beak_servo.write(closed_pos_beak_servo);//start closed
   beak_servo.attach(8);// callibrate pin.
-  pinMode(beak_servo, OUTPUT);
   beak_pos = closed_pos_beak_servo;
 
   
-  head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
+  head_servo.write(down_pos_head_servo);//start up ensure in up already else will jerk at begining
   head_servo.attach(3);// callibrate pin
-  pinMode(head_servo, OUTPUT);
-  head_pos = up_pos_head_servo;
+  head_pos = down_pos_head_servo;
 
   delay(1000);
-  Serial.println("test");
+  Serial.println("initialising grabber ... ");
 
   upHead();
 
@@ -217,6 +245,9 @@ void setup() {
     delay(100000);
   }
   Serial.println("finished set up");
+
+  moveForward();
+  delay(500);//CALLIBRATE
 }
 void loop() {
   int left_line_value = digitalRead(left_line_sensor_pin); // read left input value
@@ -232,7 +263,14 @@ void loop() {
     if (tasks_completed == all_tasks_completed) {
       //STOP MOVING AND DELAY
       Serial.println("All routes completed.");
-      // trigger reverseFORSETTIME function
+      
+      moveBackward();// trigger reverseFORSETTIME function
+      delay(3000);//CALLIBRATE
+      stopMoving();
+      while (true){
+        delay(10000);
+      }
+
     } 
     else {
       //try this code
@@ -292,6 +330,14 @@ void loop() {
     }
     else if (action == "Right"){
       right = true;
+    }
+    else if (action == "Turn_180_END"){// go back a bit (off start block), spin around, reverse after
+
+      moveBackward();
+      delay(1000);
+      stopMoving();
+
+      left_180 = true;
     }
     else if (action == "Forward_FL"){
       left = false;//should just skip junction
@@ -460,7 +506,9 @@ void loop() {
 
 
   if(front_left_line_value==0 && front_right_line_value==0 && turn_left == false && turn_right == false){ //FORWARD if correct at start
-    
+    at_left_T_junction = false;
+    at_right_T_junction = false;
+    at_T_junction = false;
     //Serial.println("FORWARD");
     if (reverse == true){
       moveBackward();
@@ -474,7 +522,25 @@ void loop() {
   //// junctions dependent on route --> i.e., left and right predetermined, junction detected is the purpose of this code
   if (turn_left == false && turn_right == false && junction_detected == false){
     if ((left_line_value==1 && right_line_value==1) || (left_line_value==1 && right_line_value==0) || (left_line_value==0 && right_line_value==1)){
-      junction_detected = true;
+      if (left_line_value==1 && right_line_value==1){
+        at_T_junction = true;
+        junction_detected = true;
+      }
+      else if (left_line_value==1 && right_line_value==0){
+        Serial.println("LEFT");
+        at_left_T_junction = true;
+        if (left == true){
+          junction_detected = true;
+        }
+        
+      }
+      if (left_line_value==0 && right_line_value==1){
+        Serial.println("RIGHT");
+        at_right_T_junction = true;
+        if (right == true){
+          junction_detected = true;
+        }
+      }
 
 
       if (reverse == true){
@@ -486,6 +552,21 @@ void loop() {
     else {
       junction_detected = false;
     }
+  }
+  ////
+
+  //// LED control logic
+  if(loopCounter >= 10) { // Toggle LED every 10 iterations
+    LED = !LED; // Toggle the LED state
+    if (LED == true){
+      digitalWrite(BLUE_LED, LOW);
+    }
+    else{
+      digitalWrite(BLUE_LED, HIGH);
+    }
+    loopCounter = 0; // Reset counter
+  } else {
+    loopCounter++; // Increment counter
   }
   ////
 }
@@ -513,16 +594,13 @@ void grabber() {
       colour_read = true;
       if(colour_detected == 1){
         red = true;
+        
       }
       else if (colour_detected == 0){
         black = true;
+        
       }
-      if(red == true && colour_read == true){
-        Serial.println("RED");
-      }
-      else if (black == true && colour_read == true){
-        Serial.println("BLACK");
-      }
+      
       delay(300);
     }
     
@@ -532,7 +610,22 @@ void grabber() {
     if (distance < grabber_distance) {
       Serial.println("In range to pick up.");
 
+      if(red == true && colour_read == true){
+        Serial.println("RED");
+        digitalWrite(RED_LED, LOW);
+      }
+      else if (black == true && colour_read == true){
+        Serial.println("BLACK");
+        digitalWrite(GREEN_LED, LOW);
+      }
+
       stopMoving();
+
+      ///turn right a bit
+      turnRight();
+      delay(250);//CALLIBRATE
+      stopMoving();
+      ///
 
       ////TEST
       openBeak();
@@ -560,11 +653,14 @@ void grabber() {
 
 
       moveForward();
-      delay(1000);
+      delay(1000);//CALLIBRATE
       stopMoving();
 
       openBeak();
       upHead();
+
+      digitalWrite(GREEN_LED, HIGH);
+      digitalWrite(RED_LED, HIGH);
       ////TEST
       delay(1000);
 
@@ -712,6 +808,7 @@ void turnLeft() {
   leftMotor->run(FORWARD);
   rightMotor->run(BACKWARD);
 }
+
 void turnRightOnSpot() {//useful after reversing or for 180 -- test
   Serial.println("Turning right ON SPOT ...");
   isMoving = true;
@@ -748,6 +845,3 @@ void rightABit(){
   leftMotor->setSpeed(steeringMotorSpeed+30);// might be good removing + 30
   leftMotor->run(BACKWARD);
 }
-
-
-
