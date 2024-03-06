@@ -1,0 +1,31 @@
+int pin11 = 11;
+bool start = false;
+
+//---------------------------------
+void(* resetFunc) (void) = 0; //  claim the position --> ISSUE
+void IRS(){
+  Serial.println("RESET");
+  resetFunc();
+}
+void setup() {
+
+  // Start the motor shield
+  pinMode(pin11, INPUT_PULLDOWN); // initialize front right sensor as as input (will still 0 for nothing 1 for on.)
+  // Initialize Serial Communication at 9600 baud rate
+  Serial.begin(9600);
+  delay(1000); // Ensure serial communication is fully set up
+
+
+  while (!start) {
+    start=digitalRead(pin11);
+    
+    Serial.println("Waiting to start");
+  }
+  Serial.println("Start");
+  delay(2000);
+  attachInterrupt(digitalPinToInterrupt(11), IRS, CHANGE);
+}
+void loop() {
+  Serial.println(digitalRead(pin11));
+  delay(500);
+}
