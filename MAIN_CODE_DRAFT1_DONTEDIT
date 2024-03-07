@@ -6,23 +6,22 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(3);//M3 pin
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(4);//M4 pin
 //initalise motor variables
-int motorSpeed = 200;//200
-int reverseMotorSpeed = 200; //(may need seperate speed callib for reversing)
-int steeringMotorSpeed = 180;//180
-int turningMotorSpeed = 180;//180
-int slowMotorSpeed = 150;//CALIBRATE
-int timeLength = 200; // define turning time
+int motorSpeed = 200;//200 CALLIBRATE
+int reverseMotorSpeed = 200; // CALLIBRATE
+int steeringMotorSpeed = 180;//180 CALLIBRATE
+int turningMotorSpeed = 180;//180 CALLIBRATE
+int slowMotorSpeed = 150;// CALIBRATE
 bool isMoving = false; // Tracks whether the robot is moving
 // ----------------------------------
 // -----LED and BUTTON INITILIASATION-------
 
 //initalise Led
 
-int button_pin = 11;
+int button_pin = 9;
 bool start = false;
 
 int RED_LED = 6;
-int GREEN_LED = 9;
+int GREEN_LED = 4;
 int BLUE_LED = 7;
 
 bool LED = false;
@@ -30,8 +29,8 @@ int loopCounter = 0;
 
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=10; // left line sensor
-int right_line_sensor_pin=4; // right line sensor
+int left_line_sensor_pin=3; // left line sensor
+int right_line_sensor_pin=11; // right line sensor
 int front_left_line_sensor_pin =2; // sensor on line at front
 int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
@@ -49,6 +48,7 @@ bool turn_right = false;
 bool started_turn_from_left_on_line = false;
 bool started_turn_from_right_on_line = false;
 bool check_end_turn = false;
+bool start_checking_for_line = false;
 
 // ----------------------------------
 
@@ -112,7 +112,7 @@ DFRobot_VL53L0X sensor;//tof sensor
 
 //// For block pick up
 //TO CALLIBRATE
-float grabber_distance = 2.5;//distance for grabber mechanism to pick up MIN 2.0
+float grabber_distance = 3.5;//distance for grabber mechanism to pick up MIN 2.0
 float detection_offset_block = 3.0;
 ////
 
@@ -190,14 +190,13 @@ void setup() {
   // Initialize Serial Communication at 9600 baud rate
   Serial.begin(9600);
   delay(1000); // Ensure serial communication is fully set up
-  /*while (!start) {
+  while (!start) {
     start=digitalRead(button_pin);
     Serial.println("Waiting to start");
-  }*/
-  // above code not working
+  
   Serial.println("Start");
-  delay(2000);
-  //attachInterrupt(digitalPinToInterrupt(button_pin), IRS, CHANGE);
+  delay(500);
+  attachInterrupt(digitalPinToInterrupt(button_pin), IRS, CHANGE);
 
 
   
@@ -227,7 +226,7 @@ void setup() {
 
   
   head_servo.write(down_pos_head_servo);//start up ensure in up already else will jerk at begining
-  head_servo.attach(3);// callibrate pin
+  head_servo.attach(10);// callibrate pin
   head_pos = down_pos_head_servo;
 
   delay(1000);
@@ -247,9 +246,10 @@ void setup() {
 
   moveForward();
 
-  while (digitalRead(left_line_sensor_pin) == 0 && digitalRead(right_line_sensor_pin) == 0){
+  /*while (digitalRead(left_line_sensor_pin) == 0 && digitalRead(right_line_sensor_pin) == 0){
     delay(50);
-  }
+  }*/
+  //possibly delete above code.
 
   
   startMillis = millis();
@@ -483,7 +483,7 @@ void loop() {
 
   
   //e.g., for left detected if passing junction, left veer will happen but then right will cancel, till it leaves junction (hopefully enough for it to not veer off)
-  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false){
+  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false && start_checking_for_line == true){
     if (reverse == true){
       rightABit();// correct in opposite way 
     }
@@ -491,7 +491,7 @@ void loop() {
       leftABit();
     }
   }
-  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false){
+  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false && start_checking_for_line == true){
     if (reverse == true){
       leftABit();//correct in opposite way
     }
@@ -593,7 +593,6 @@ void grabber() {
   
 
   int colour_detected = digitalRead(IR);
-  delay(400);
 
   
 
@@ -614,7 +613,6 @@ void grabber() {
         
       }
       
-      delay(300);
     }
     
     
@@ -853,14 +851,23 @@ void leftABit(){
   //Serial.println("left a bit");
   isMoving = true;
   leftMotor->setSpeed(steeringMotorSpeed*0);
-  leftMotor->run(FORWARD);
   rightMotor->setSpeed(steeringMotorSpeed+50);
-  rightMotor->run(FORWARD);
+  if (reverse == true){
+    leftMotor->run(BACKWARD);
+  }
+  else{
+    leftMotor->run(FORWARD);
+  }
+  
+  
+  
 }
 void rightABit(){
   //Serial.println("right a bit");
   isMoving = true;
   rightMotor->setSpeed(steeringMotorSpeed*0);
+  if (reverse == true){
+  }
   rightMotor->run(FORWARD);
   leftMotor->setSpeed(steeringMotorSpeed+50);// might be good removing + 30
   leftMotor->run(FORWARD);
