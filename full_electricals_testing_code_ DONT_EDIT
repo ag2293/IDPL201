@@ -81,24 +81,28 @@ void loop() {
   while (counter<=9){
     Serial.println(digitalRead(left_line_sensor_pin));
     counter=counter+1;
+    delay(1000);
     }
   counter=0;
   Serial.println("10 Seconds testing middle left line sensor");
   while (counter<=9){
     Serial.println(digitalRead(middle_left_line_sensor_pin));
     counter=counter+1;
+    delay(1000);
     }
   counter=0;
   Serial.println("10 Seconds testing middle right line sensor");
   while (counter<=9){
     Serial.println(digitalRead(middle_right_line_sensor_pin));
     counter=counter+1;
+    delay(1000);
     }
   counter=0;
   Serial.println("10 Seconds testing right line sensor");
   while (counter<=9){
     Serial.println(digitalRead(right_line_sensor_pin));
     counter=counter+1;
+    delay(1000);
     }
   counter=0;
   Serial.println("Now testing ToF sensor for 10 seconds");
