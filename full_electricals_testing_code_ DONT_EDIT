@@ -1,0 +1,145 @@
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+#include <Servo.h>;
+
+Servo beak_servo;
+Servo head_servo;
+
+
+int open_pos_beak_servo = 55; 
+int closed_pos_beak_servo = 0; 
+int up_pos_head_servo = 95; 
+int down_pos_head_servo = 0; 
+int down_pos_lifted_head_servo = 20; 
+
+
+DFRobot_VL53L0X sensor;
+
+int green_led_pin=4;
+int blue_led_pin=7;
+int red_led_pin=6;
+int button_pin = 9; 
+int left_line_sensor_pin=3; // left line sensor
+int right_line_sensor_pin=11; // right line sensor
+int middle_left_line_sensor_pin =2; // sensor on line at front
+int middle_right_line_sensor_pin =13; // sensor on line at back
+int beak_servo_pin=8;
+int head_servo_pin=10;
+
+#define IR 12
+int counter=0;
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  sensor.begin(0x50);
+  sensor.setMode(sensor.eContinuous,sensor.eHigh);
+  sensor.start();
+
+  beak_servo.attach(beak_servo_pin);
+  head_servo.attach(head_servo_pin);
+
+  pinMode(IR,INPUT);
+  pinMode(green_led_pin, OUTPUT);
+  pinMode(blue_led_pin, OUTPUT);
+  pinMode(red_led_pin, OUTPUT);
+  pinMode(button_pin, INPUT_PULLDOWN);
+  pinMode(left_line_sensor_pin, INPUT);
+  pinMode(right_line_sensor_pin, INPUT);
+  pinMode(middle_left_line_sensor_pin, INPUT); 
+  pinMode(middle_right_line_sensor_pin, INPUT);
+
+}
+
+void loop() {
+  digitalWrite(green_led_pin, LOW);
+  digitalWrite(red_led_pin, LOW);
+  digitalWrite(blue_led_pin, LOW);
+  // put your main code here, to run repeatedly:
+  digitalWrite(green_led_pin, HIGH);
+  Serial.println("Green LED turned on");
+  delay(2000);
+  digitalWrite(green_led_pin, LOW);
+
+  digitalWrite(blue_led_pin, HIGH);
+  Serial.println("Blue LED turned on");
+  delay(2000);
+  digitalWrite(blue_led_pin, LOW);
+
+  digitalWrite(red_led_pin, HIGH);
+  Serial.println("Red LED turned  on");
+  delay(2000);
+  digitalWrite(red_led_pin, LOW);
+
+  Serial.println("Press button to continue");
+  while (digitalRead(button_pin)!=1){
+    Serial.println("Waiting for you to press button");
+  }
+  Serial.println("Now testing line sensors");
+  Serial.println("10 Seconds testing left line sensor");
+  while (counter<=9){
+    Serial.println(digitalRead(left_line_sensor_pin));
+    counter=counter+1;
+    }
+  counter=0;
+  Serial.println("10 Seconds testing middle left line sensor");
+  while (counter<=9){
+    Serial.println(digitalRead(middle_left_line_sensor_pin));
+    counter=counter+1;
+    }
+  counter=0;
+  Serial.println("10 Seconds testing middle right line sensor");
+  while (counter<=9){
+    Serial.println(digitalRead(middle_right_line_sensor_pin));
+    counter=counter+1;
+    }
+  counter=0;
+  Serial.println("10 Seconds testing right line sensor");
+  while (counter<=9){
+    Serial.println(digitalRead(right_line_sensor_pin));
+    counter=counter+1;
+    }
+  counter=0;
+  Serial.println("Now testing ToF sensor for 10 seconds");
+  while (counter<=99){
+    counter=counter+1;
+    float distance= sensor.getDistance();
+    Serial.println(distance);
+    delay(100);
+    }
+ Serial.println("Now testing servos");
+ Serial.println("Rotating head servo to 0 -> 45 -> 0");
+ head_servo.write(0);
+ delay(1000);
+ head_servo.write(45);
+ delay(1000);
+ head_servo.write(0);
+ delay(1000);
+
+ Serial.println("Rotating beak servo to 0 -> 45 -> 0");
+ beak_servo.write(0);
+ delay(1000);
+ beak_servo.write(45);
+ delay(1000);
+ beak_servo.write(0);
+ delay(1000);
+
+ Serial.println("Now testing colour sensor for 10 seconds");
+ counter=0;
+ while (counter<=100){
+  counter=counter+1;
+  delay(100);
+ if(digitalRead(IR) == 1){
+    Serial.println("Colour: RED");
+ }
+ else{
+    Serial.println("Colour: BLACK ");
+ }
+ 
+  Serial.println();
+ }
+ 
+
+
+}
