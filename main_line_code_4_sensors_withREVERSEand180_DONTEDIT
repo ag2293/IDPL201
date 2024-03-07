@@ -23,8 +23,8 @@ bool LED = false;
 */
 // ----------------------------------
 // -----Line Sensor INITILIASATION-------
-int left_line_sensor_pin=10; // left line sensor
-int right_line_sensor_pin=4; // right line sensor
+int left_line_sensor_pin=3; // left line sensor
+int right_line_sensor_pin=11; // right line sensor
 int front_left_line_sensor_pin =2; // sensor on line at front
 int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
@@ -35,7 +35,7 @@ bool at_left_T_junction = false;// can only go left or forward
 
 bool left = false;
 bool right = false;
-static unsigned long totalMillis = 50;
+static unsigned long totalMillis = 1000;//needs atleast one second after junction detected before it can be detected again.
 unsigned long startMillis = 0;
 bool junction_detected = false;
 
@@ -53,6 +53,13 @@ bool left_180 = false;//180 turn left
 bool right_180 = false;//180 turn right
 bool set_next_action = true;
 //
+
+void(* resetFunc) (void) = 0; //  function to reset Arduino
+
+void IRS(){
+  Serial.println("RESET");//have to reopen serial comms to see.
+  resetFunc();
+}
 
 void setup() {
   // Start the motor shield
@@ -223,30 +230,38 @@ void loop() {
   }
   
   //// junctions dependent on route --> i.e., left and right predetermined, junction detected is the purpose of this code
-  if (turn_left == false && turn_right == false && junction_detected == false){
+  if (turn_left == false && turn_right == false && junction_detected == false && (millis() - startMillis > totalMillis)){
     if ((left_line_value==1 && right_line_value==1) || (left_line_value==1 && right_line_value==0) || (left_line_value==0 && right_line_value==1)){
       if (left_line_value==1 && right_line_value==1){
         at_T_junction = true;
+        junction_detected = true;
       }
       else if (left_line_value==1 && right_line_value==0){
         Serial.println("LEFT");
         at_left_T_junction = true;
+        if (left == true){
+          junction_detected = true;
+        }
+        
       }
       if (left_line_value==0 && right_line_value==1){
         Serial.println("RIGHT");
         at_right_T_junction = true;
+        if (right == true){
+          junction_detected = true;
+        }
       }
-      junction_detected = true;
+      
 
 
-      if (reverse == true){
+      if (reverse == true){//in next run should detect it
         set_next_action = true;
       }
-      // for now always turn left
+      // for now always turn right
       right = true;
       //REMOVE as will be set in navigation selection statement.
 
-
+      startMillis = millis();
     }
     else {
       junction_detected = false;
