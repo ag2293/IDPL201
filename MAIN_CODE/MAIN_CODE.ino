@@ -14,10 +14,10 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(3);//M3 pin
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(4);//M4 pin
 //initalise motor variables
-int motorSpeed = 200;//200 CALLIBRATE
-int reverseMotorSpeed = 200; // CALLIBRATE
-int steeringMotorSpeed = 180;//180 CALLIBRATE
-int turningMotorSpeed = 180;//180 CALLIBRATE
+int motorSpeed = 220;//200 CALLIBRATE
+int reverseMotorSpeed = 220; // CALLIBRATE
+int steeringMotorSpeed = 190;//180 CALLIBRATE
+int turningMotorSpeed = 190;//180 CALLIBRATE
 int slowMotorSpeed = 150;// CALIBRATE
 bool isMoving = false; // Tracks whether the robot is moving
 // ----------------------------------
@@ -43,13 +43,11 @@ int front_left_line_sensor_pin =2; // sensor on line at front
 int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
 // -----Junction INITILIASATION-------
-bool at_T_junction = false;// can only go left or right
-bool at_right_T_junction = false;// can only go right or forward
-bool at_left_T_junction = false;// can only go left or forward
 
-static unsigned long totalMillis = 2200;//needs atleast 2.2 second after junction detected before it can be detected again.
+static unsigned long totalMillis = 800;//needs atleast 1.3 second after junction detected before it can be detected again.
+static unsigned long totalDelayFollowing = 1000;//needs atleast 1.3 second after junction detected before it can be detected again.
 unsigned long startMillis = 0;
-static unsigned long junctionDelayMillis = 2700;//needs atleast 2.7 second after junction detected before it can be detected again.
+static unsigned long junctionDelayMillis = 550;//needs atleast 2.7 second after junction detected before it can be detected again.
 bool junction_detected = false;
 
 bool turn_left = false;
@@ -57,7 +55,6 @@ bool turn_right = false;
 bool started_turn = false;
 bool turning = false;
 bool check_end_turn = false;
-bool start_checking_for_line = false;
 
 // ----------------------------------
 
@@ -67,26 +64,26 @@ bool start_checking_for_line = false;
 // Define routes 
 // Define routes 
 String pick_up_1[3] = {"Left", "Right", "Block_Detection"};// START to pickup 1
-String drop_off_1_green[5] = {"Reverse", "Left", "Left", "Drop_Block", "Turn_180_Left"};// pick up 1 to green
-String drop_off_1_red[6] = {"Reverse", "Right", "Forward_FR", "Right", "Drop_Block", "Turn_180_Right"};//pick up 1 to red
+String drop_off_1_green[4] = {"Turn_180_Left", "Right", "Left", "Drop_Block"};// pick up 1 to green
+String drop_off_1_red[5] = {"Turn_180_Right", "Left", "Forward_FR", "Right", "Drop_Block"};//pick up 1 to red
 String pick_up_2_green[6] = {"Turn_180_Left", "Forward_RF", "Right", "Forward_FL", "Right", "Block_Detection"};// green to 2
-String pick_up_2_red[4] = {"Forward_FL", "Left", "Left", "Block_Detection"};//red to 2
-String drop_off_2_green[7] = {"Reverse", "Right", "Forward_FR", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 2 to green
-String drop_off_2_red[6] = {"Reverse", "Left", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 2 to red
-String pick_up_3_green[5] = {"Forward_FR", "Right", "Left", "Left", "Block_Detection"};// green to 3
-String pick_up_3_red[6] = {"Forward_FL", "Left", "Forward_FL", "Right", "Left", "Block_Detection"};// red to 3
-String drop_off_3_green[7] = {"Reverse", "Left", "Right", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 3 to green
-String drop_off_3_red[8] = {"Reverse", "Left", "Left", "Forward_FR", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 3 to red
+String pick_up_2_red[5] = {"Turn_180_Right", "Forward_FL", "Left", "Left", "Block_Detection"};//red to 2
+String drop_off_2_green[6] = {"Turn_180_Right", "Left", "Forward_FR", "Left", "Forward_FL", "Drop_Block"};// 2 to green
+String drop_off_2_red[5] = {"Turn_180_Left", "Right", "Right", "Forward_FR", "Drop_Block"};// 2 to red
+String pick_up_3_green[6] = {"Turn_180_Right", "Forward_FR", "Right", "Left", "Left", "Block_Detection"};// green to 3
+String pick_up_3_red[7] = {"Turn_180_Right", "Forward_FL", "Left", "Forward_FL", "Right", "Left", "Block_Detection"};// red to 3
+String drop_off_3_green[7] = {"Turn_180_Left", "Right", "Right", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 3 to green
+String drop_off_3_red[8] = {"Turn_180_Left", "Right", "Left", "Forward_FR", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 3 to red
 String pick_up_4_green[5] = {"Forward_FR", "Forward_FR", "Forward_FR", "Right", "Block_Detection"};// green to 4
 String pick_up_4_red[4] = {"Forward_FL", "Forward_FL", "Left", "Block_Detection"};// red to 4
-String drop_off_4_green[7] = {"Reverse", "Right", "Forward_FL", "Forward_FL", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 4 to green
-String drop_off_4_red[6] = {"Reverse", "Left", "Forward_FR", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 4 to red
+String drop_off_4_green[7] = {"Turn_180_Right", "Left", "Forward_FL", "Forward_FL", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 4 to green
+String drop_off_4_red[6] = {"Turn_180_Left", "Right", "Forward_FR", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 4 to red
 String return_to_start_green[4] = {"Right", "Forward_FL", "Right", "Turn_180_END"};// green to Start
 String return_to_start_red[3] = {"Left", "Left", "Turn_180_END"};// red to Start
 
 // Array of pointers to each route array for easier iteration
 String *routes[17] = {pick_up_1, drop_off_1_green, drop_off_1_red, pick_up_2_green, pick_up_2_red, drop_off_2_green, drop_off_2_red, pick_up_3_green, pick_up_3_red, drop_off_3_green, drop_off_3_red, pick_up_4_green, pick_up_4_red, drop_off_4_green, drop_off_4_red, return_to_start_green, return_to_start_red};
-int routeSizes[17] = {3, 5, 6, 6, 4, 7, 6, 5, 6, 7, 8, 5, 4, 7, 6, 4, 3};
+int routeSizes[17] = {3, 4, 5, 6, 5, 6, 5, 5, 6, 7, 8, 5, 4, 7, 6, 4, 3};
 
 
 bool left = false;
@@ -126,6 +123,8 @@ float detection_offset_block = 3.0;
 float wall_distance = 31.0;//where grabber will tigger release mechanism
 float detection_offset_wall = 8.0;
 
+static unsigned long totalDelayDropOff = 3000;//needs atleast 1.3 second after junction detected before it can be detected again.
+
 // --------------------------------------------------------------
 
 // ----------- Initialise COLOUR SENSOR VARS --------------------
@@ -134,7 +133,6 @@ float detection_offset_wall = 8.0;
 
 //COLOUR SENSOR DISTANCE CALLIBRATED
 float detection_distance = 8.0;//min distance colour sensor callibrated to detect black vs red at (can set with screwdriver)
-bool colour_read = false;//only if within distance should colour value be of significance
 bool red = false;//colour red or (if not) black
 bool black = false;//colour red or (if not) black
 
@@ -148,10 +146,10 @@ Servo head_servo;
 
 
 int open_pos_beak_servo = 30; 
-int closed_pos_beak_servo = 5; 
-int up_pos_head_servo = 90; 
-int down_pos_head_servo = 150; 
-int down_pos_lifted_head_servo = 140;
+int closed_pos_beak_servo = 0; 
+int up_pos_head_servo = 0; 
+int down_pos_head_servo = 57; 
+int down_pos_lifted_head_servo = 50;
 
 int beak_pos = 0;
 int head_pos = 0;
@@ -360,10 +358,8 @@ void grabber() {
 
     distance = distance - detection_offset_block;//offset in sensor (in built dont change)
     if (distance <= detection_distance){
-      colour_read = true;
       if(colour_detected == 1){
         red = true;
-        
       }
       else if (colour_detected == 0){
         black = true;
@@ -376,22 +372,27 @@ void grabber() {
 
     // Check if the distance is smaller than grabber distance
     if (distance < grabber_distance) {
+
       Serial.println("In range to pick up.");
 
-      if(red == true && colour_read == true){
+      digitalWrite(BLUE_LED, LOW);
+
+      if(red == true){
         Serial.println("RED");
-        digitalWrite(RED_LED, LOW);
+        digitalWrite(RED_LED, HIGH);
       }
-      else if (black == true && colour_read == true){
+      else if (black == true){
         Serial.println("BLACK");
-        digitalWrite(GREEN_LED, LOW);
+        digitalWrite(GREEN_LED, HIGH);
       }
 
       stopMoving();
 
+      delay(7500);//needs to display LED whilst stationary
+
       ///turn right a bit
       turnRight();
-      delay(250);//CALLIBRATE
+      delay(500);//CALLIBRATE
       stopMoving();
       ///
 
@@ -400,11 +401,12 @@ void grabber() {
       downHead();
       closeBeak();
       downLiftedHead();
+      upHead();
       ////TEST
 
       ///turn left a bit
       turnLeft();
-      delay(250);//CALLIBRATE
+      delay(500);//CALLIBRATE
       stopMoving();
       ///
 
@@ -420,6 +422,7 @@ void grabber() {
     if (distance < wall_distance) {
       Serial.println("In range to drop off.");
 
+      digitalWrite(BLUE_LED, LOW);
       stopMoving();
 
       ////TEST
@@ -427,14 +430,14 @@ void grabber() {
 
 
       moveForward();
-      delay(1000);//CALLIBRATE
+      delay(150);//CALLIBRATE
       stopMoving();
 
       openBeak();
       upHead();
 
-      digitalWrite(GREEN_LED, HIGH);
-      digitalWrite(RED_LED, HIGH);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(RED_LED, LOW);
       ////TEST
       delay(1000);
 
@@ -480,7 +483,7 @@ void setup() {
     Serial.println("Waiting to start");
   }
   Serial.println("Start");
-  delay(500);
+  delay(1000);
   attachInterrupt(digitalPinToInterrupt(button_pin), IRS, CHANGE);
 
 
@@ -504,20 +507,21 @@ void setup() {
   //Laser rangefinder begins to work
   sensor.start();
 
+  Serial.println("initialising grabber ... ");
 
   beak_servo.write(closed_pos_beak_servo);//start closed
   beak_servo.attach(8);// callibrate pin.
   beak_pos = closed_pos_beak_servo;
 
   
-  head_servo.write(down_pos_head_servo);//start up ensure in up already else will jerk at begining
+  head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
   head_servo.attach(10);// callibrate pin
-  head_pos = down_pos_head_servo;
+  head_pos = up_pos_head_servo;
 
   delay(1000);
-  Serial.println("initialising grabber ... ");
+  
 
-  upHead();
+  //upHead();
 
   if (debug_grabber == true){
     openBeak();
@@ -529,9 +533,29 @@ void setup() {
   }
   Serial.println("finished set up");
 
-  moveForward();
+  
   
   startMillis = millis();
+
+  while (millis() - startMillis < 1500){
+    moveForward();
+    delay(25);
+    //// LED control logic
+    if(loopCounter >= 10) { // Toggle LED every 10 iterations
+      LED = !LED; // Toggle the LED state
+      if (LED == true){
+        digitalWrite(BLUE_LED, HIGH);
+      }
+      else{
+        digitalWrite(BLUE_LED, LOW);
+      }
+      loopCounter = 0; // Reset counter
+    } 
+    else {
+      loopCounter++; // Increment counter
+    }
+    ////
+  }
 
   Serial.println("STARTING ...");
 }
@@ -560,36 +584,11 @@ void loop() {
       }
     } 
     else {
-      
-      
-      // FOR COLOUR DELETE
-      if (currentRoute == 1 || currentRoute == 2){
-        red = true;
-        black = false;
-      }
-      else if (currentRoute == 3|| currentRoute == 4 || currentRoute == 5 || currentRoute == 6){
-        red = false;
-        black = true;
-      }
-      else if (currentRoute == 7|| currentRoute == 8 || currentRoute == 9 || currentRoute == 10){
-        red = false;
-        black = true;
-      }
-      else if (currentRoute == 11|| currentRoute == 12 || currentRoute == 13 || currentRoute == 14){
-        red = true;
-        black = false;
-      }
-      //
-      
-      
-      if (currentRoute == 0){
-        currentRoute ++;
-      }
-      else if (black == true){
+      if (black == true){
         currentRoute = (2*index + 1);//green route
       }
       else if (red == true){
-        currentRoute = (2*index + 2);//green route
+        currentRoute = (2*index + 2);//red route
       }
       insideRoute = true;
       indexInsideRoute = 0;
@@ -654,8 +653,17 @@ void loop() {
   }
   ////
 
+
+  if (left_180 == true){
+    turn_left = true;
+  }
+  if (right_180 == true){
+    turn_right = true;
+  }
+
+
   //// actual turning (180 turning set if needed and no forward or BACKWARD motion as done on line not on junction)
-  if (turn_left == true || left_180 == true){
+  if (turn_left == true){
     
     if (started_turn == false && turning == false && check_end_turn == false){
       if ((millis() - startMillis > junctionDelayMillis && left_line_value == 0) || left_180 == true){
@@ -690,7 +698,7 @@ void loop() {
     }
     ////
   }
-  if (turn_right == true || right_180 == true){
+  if (turn_right == true){
     if (started_turn == false && turning == false && check_end_turn == false){
       if ((millis() - startMillis > junctionDelayMillis && right_line_value == 0) || right_180 == true){
         turnRight();
@@ -727,43 +735,15 @@ void loop() {
   }
 
   //// grabber
-  if (detect_wall == true || detect_block == true){
-    //grabber();
-
-    ////DELETE
-    moveForward();
-    delay(2000);
-    stopMoving();
-    detect_wall == false;
-    detect_block == false;
-    set_next_action = true;
-    ////
+  if (detect_wall == true && (millis() - startMillis > totalDelayDropOff)){
+    grabber();
+  }
+  else if (detect_block == true){
+    grabber();
   }
   ////
-  
-  //e.g., for left detected if passing junction, left veer will happen but then right will cancel, till it leaves junction (hopefully enough for it to not veer off)
-  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false && start_checking_for_line == true){
-    if (reverse == true){
-      rightABit();// correct in opposite way 
-    }
-    else{
-      leftABit();
-    }
-  }
-  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false && start_checking_for_line == true){
-    if (reverse == true){
-      leftABit();//correct in opposite way
-    }
-    else{
-      rightABit();
-    }
-  }
 
 
-
-  
-
-  
   //// sets turning direction
   if (junction_detected == true){//
     Serial.println("JUNCTION DETECTED");
@@ -775,11 +755,29 @@ void loop() {
   }
   ////
 
+  
+  //e.g., for left detected if passing junction, left veer will happen but then right will cancel, till it leaves junction (hopefully enough for it to not veer off)
+  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false && junction_detected == false && (millis() - startMillis > totalDelayFollowing)){
+    if (reverse == true){
+      rightABit();// correct in opposite way 
+    }
+    else{
+      leftABit();
+    }
+  }
+  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false && junction_detected == false && (millis() - startMillis > totalDelayFollowing)){
+    if (reverse == true){
+      leftABit();//correct in opposite way
+    }
+    else{
+      rightABit();
+    }
+  }
+  //
+
+
 
   if(front_left_line_value==0 && front_right_line_value==0 && turn_left == false && turn_right == false){ //FORWARD if correct at start
-    at_left_T_junction = false;
-    at_right_T_junction = false;
-    at_T_junction = false;
     //Serial.println("FORWARD");
     if (reverse == true){
       moveBackward();
@@ -791,43 +789,19 @@ void loop() {
   }
   
   //// junctions dependent on route --> i.e., left and right predetermined, junction detected is the purpose of this code
-  if (turn_left == false && turn_right == false && junction_detected == false  && (millis() - startMillis > totalMillis) && start_checking_for_line == true){//prevents junction detection retrigger 
-    if ((left_line_value==1 && right_line_value==1) || (left_line_value==1 && right_line_value==0) || (left_line_value==0 && right_line_value==1)){
-      if (left_line_value==1 && right_line_value==1){
-        at_T_junction = true;
-        Serial.println("T");
-        junction_detected = true;
-      }
-      else if (left_line_value==1 && right_line_value==0){
-        at_left_T_junction = true;
-        Serial.println("LF");
-        junction_detected = true;
-        
-        
-      }
-      if (left_line_value==0 && right_line_value==1){
-        at_right_T_junction = true;
-        Serial.println("RF");
-        junction_detected = true;
-        
-      }
+  if (turn_left == false && turn_right == false && junction_detected == false && (millis() - startMillis > totalMillis)){
+    if (left_line_value==1 || right_line_value==1){
+      junction_detected = true;
 
-
-      if (reverse == true){
+      if (reverse == true){//in next run should detect it
         set_next_action = true;
-        Serial.println("Was reversing");
       }
+
       startMillis = millis();
-
-
     }
     else {
       junction_detected = false;
     }
-  }
-
-  if ((millis() - startMillis > totalMillis) && start_checking_for_line == false){//prevents steering or junctions on starting zone
-    start_checking_for_line == true;
   }
   ////
 
@@ -835,10 +809,10 @@ void loop() {
   if(loopCounter >= 10) { // Toggle LED every 10 iterations
     LED = !LED; // Toggle the LED state
     if (LED == true){
-      digitalWrite(BLUE_LED, LOW);
+      digitalWrite(BLUE_LED, HIGH);
     }
     else{
-      digitalWrite(BLUE_LED, HIGH);
+      digitalWrite(BLUE_LED, LOW);
     }
     loopCounter = 0; // Reset counter
   } 
