@@ -43,10 +43,10 @@ Servo head_servo;
 
 
 int open_pos_beak_servo = 30; 
-int closed_pos_beak_servo = 5; 
-int up_pos_head_servo = 90; 
-int down_pos_head_servo = 150; 
-int down_pos_lifted_head_servo = 140;
+int closed_pos_beak_servo = 0; 
+int up_pos_head_servo = 0; 
+int down_pos_head_servo = 57; 
+int down_pos_lifted_head_servo = 50;
 
 int beak_pos = 0;
 int head_pos = 0;
@@ -56,7 +56,7 @@ int head_pos = 0;
 
 // ----------- Initialise TEST VARS --------------------
 
-bool debug_grabber = false;//to initialise grabbers --> delay introduced before main loop (i.e 100s)
+bool debug_grabber = true;//to initialise grabbers --> delay introduced before main loop (i.e 100s)
 
 
 // --------------------------------------------------------------
@@ -80,22 +80,21 @@ void setup() {
   //Laser rangefinder begins to work
   sensor.start();
 
-
-  beak_servo.write(closed_pos_beak_servo);//start closed
   beak_servo.attach(8);// callibrate pin.
+  beak_servo.write(closed_pos_beak_servo);//start closed
   beak_pos = closed_pos_beak_servo;
 
   delay(2000);
 
-  head_servo.write(down_pos_head_servo);//start up ensure in up already else will jerk at begining
   head_servo.attach(10);// callibrate pin
-  head_pos = down_pos_head_servo;
+  head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
+  head_pos = up_pos_head_servo;
 
   delay(1000);
   Serial.begin(9600);
   Serial.println("test");
 
-  upHead();
+  //upHead();
 
   if (debug_grabber == true){
     openBeak();
@@ -201,7 +200,7 @@ void openBeak() {
   
   for (pos = beak_pos; pos <= open_pos_beak_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
     beak_servo.write(pos); // tell servo to go to position
-    delay(15); // waits 15 ms for the servo to reach the position 
+    delay(50); // waits 15 ms for the servo to reach the position 
   }
   beak_pos = open_pos_beak_servo;
 }
