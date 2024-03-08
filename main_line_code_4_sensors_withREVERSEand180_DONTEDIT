@@ -35,15 +35,17 @@ bool at_left_T_junction = false;// can only go left or forward
 
 bool left = false;
 bool right = false;
-static unsigned long totalMillis = 1000;//needs atleast one second after junction detected before it can be detected again.
+static unsigned long totalMillis = 2200;//needs atleast one second after junction detected before it can be detected again.
+static unsigned long junctionDelayMillis = 2700;//needs atleast 1 second after junction detected before it can be detected again.
 unsigned long startMillis = 0;
 bool junction_detected = false;
 
 bool turn_left = false;
 bool turn_right = false;
-bool started_turn_from_left_on_line = false;
-bool started_turn_from_right_on_line = false;
+bool started_turn = false;
+bool turning = false;
 bool check_end_turn = false;
+
 
 // ----------------------------------
 
@@ -53,6 +55,7 @@ bool left_180 = false;//180 turn left
 bool right_180 = false;//180 turn right
 bool set_next_action = true;
 //
+
 
 void(* resetFunc) (void) = 0; //  function to reset Arduino
 
@@ -91,89 +94,72 @@ void loop() {
 
   //// actual turning (180 turning set if needed and no forward or backward motion as done on line not on junction)
   if (turn_left == true || left_180 == true){
-    //180 degree turn or reverse till junction need on spot.
-    if (left_180 == true || reverse == true){
-      turnLeftOnSpot();
-    }
-    else{
-      turnLeft();
-    }
     
-    if (started_turn_from_left_on_line == false && started_turn_from_right_on_line == false && check_end_turn == false){
-      if (digitalRead(right_line_sensor_pin) == 1){// also should work for end t-junction
-        started_turn_from_right_on_line = true;
-        check_end_turn = true;
+    if (started_turn == false && turning == false && check_end_turn == false){
+      if ((millis() - startMillis > junctionDelayMillis && left_line_value == 0) || left_180 == true){
+        turnLeft();
+        started_turn = true;
       }
-      else if (digitalRead(left_line_sensor_pin) == 1){
-        started_turn_from_left_on_line = true;
+      else {
+        moveForward();
       }
-      
     }
 
-    //// left turn left on line (needs right to cross line)
-    if (started_turn_from_left_on_line == true && check_end_turn == false){
-      if (digitalRead(right_line_sensor_pin) == 1){
-        check_end_turn = true;
-      }
+    if (started_turn == true  && left_line_value == 1){
+      started_turn = false;
+      turning = true;
+    }
+
+    if (turning == true && front_left_line_value == 1 && left_line_value == 0){
+      started_turn = false;
+      turning = false;
+      check_end_turn = true;
     }
     ////
 
-    //// when both right sensors off line, continue line following
-    if (check_end_turn == true){
-      if (digitalRead(right_line_sensor_pin) == 0 && digitalRead(front_right_line_sensor_pin) == 1){
-        turn_left = false;
-        left_180 = false;
-        started_turn_from_left_on_line = false;
-        started_turn_from_right_on_line = false;
-        check_end_turn = false;
-        set_next_action = true;
-        reverse = false;
-        moveForward();//always move forward after turn by default
-      }
+    if (check_end_turn == true && front_right_line_value == 1){
+      turn_left = false;
+      left_180 = false;
+
+      check_end_turn = false;
+      set_next_action = true;
+      reverse = false;
+      moveForward();//always move forward after turn by default
     }
     ////
   }
   if (turn_right == true || right_180 == true){
-    //180 degree turn or reverse till junction need on spot.
-    if (right_180 == true  || reverse == true){
-      turnRightOnSpot();
-    }
-    else{
-      turnRight();
-    }
-
-    if (started_turn_from_left_on_line == false && started_turn_from_right_on_line == false && check_end_turn == false){
-      if (digitalRead(left_line_sensor_pin) == 1){// also should encompass t-junction
-        started_turn_from_left_on_line = true;
-        check_end_turn = true;
+    if (started_turn == false && turning == false && check_end_turn == false){
+      if ((millis() - startMillis > junctionDelayMillis && right_line_value == 0) || right_180 == true){
+        turnRight();
+        started_turn = true;
       }
-      else if (digitalRead(right_line_sensor_pin) == 1){
-        started_turn_from_right_on_line = true;
+      else {
+        moveForward();
       }
-      
     }
 
-    //// right turn right on line (needs left to cross line)
-    if (started_turn_from_right_on_line == true && check_end_turn == false){
-      if (digitalRead(left_line_sensor_pin) == 1){
-        check_end_turn = true;
-      }
+    if (started_turn == true  && right_line_value == 1){
+      started_turn = false;
+      turning = true;
+    }
+
+    if (turning == true && front_right_line_value == 1 && right_line_value == 0){
+      started_turn = false;
+      turning = false;
+      check_end_turn = true;
     }
     ////
 
-    //// when both left sensors off line, continue line following
-    if (check_end_turn == true){
-      if (digitalRead(left_line_sensor_pin) == 0 && digitalRead(front_left_line_sensor_pin) == 1){
-        turn_right = false;
-        right_180 = false;
-        started_turn_from_left_on_line = false;
-        started_turn_from_right_on_line = false;
-        check_end_turn = false;
-        set_next_action = true;
-        reverse = false;
-        Serial.println("finished turn");
-        moveForward();//always move forward after turn by default
-      }
+    if (check_end_turn == true && front_left_line_value == 1){
+      turn_right = false;
+      right_180 = false;
+
+      check_end_turn = false;
+      set_next_action = true;
+      reverse = false;
+      
+      moveForward();//always move forward after turn by default
     }
     ////
   }
@@ -277,10 +263,10 @@ void moveForward() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(BACKWARD);
+  //leftMotor->run(BACKWARD);
+  //rightMotor->run(BACKWARD);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
 }
 
 void moveForwardSlowly() {
@@ -288,10 +274,10 @@ void moveForwardSlowly() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(slowMotorSpeed);
   rightMotor->setSpeed(slowMotorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(BACKWARD);
+  //leftMotor->run(BACKWARD);
+  //rightMotor->run(BACKWARD);
+  leftMotor->run(FORWARD);
+  rightMotor->run(FORWARD);
 }
 
 void stopMoving() {
@@ -309,65 +295,84 @@ void moveBackward() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(reverseMotorSpeed);
   rightMotor->setSpeed(reverseMotorSpeed);
-  //leftMotor->run(FORWARD);
-  //rightMotor->run(FORWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
+  //leftMotor->run(BACKWARD);
+  //rightMotor->run(BACKWARD);
+  leftMotor->run(BACKWARD);
+  rightMotor->run(BACKWARD);
 }
 
 void turnRight() {
-  //Serial.println("Turning right ...");
+  Serial.println("Turning right ...");
+
+  //moveForward();
+  //delay(250);
   isMoving = true;
   leftMotor->setSpeed(turningMotorSpeed);
-  rightMotor->setSpeed(turningMotorSpeed/2);
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(BACKWARD);
-  leftMotor->run(BACKWARD);
+  rightMotor->setSpeed(turningMotorSpeed/6);
+  // leftMotor->run(BACKWARD);
+  // rightMotor->run(FORWARD);
+  
+  leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
 }
 void turnLeft() {
   //Serial.println("Turning left ...");
+  //moveForward();
+  //delay(250);
+
   isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed/2);
+  leftMotor->setSpeed(turningMotorSpeed/6);
   rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(BACKWARD);
-  // rightMotor->run(FORWARD);
+  // leftMotor->run(FORWARD);
+  // rightMotor->run(BACKWARD);
   leftMotor->run(FORWARD);
-  rightMotor->run(BACKWARD);
+  rightMotor->run(FORWARD);
 }
-void turnRightOnSpot() {//useful after reversing or for 180 -- test
+
+void turnRightOnSpot() {
+  
   Serial.println("Turning right ON SPOT ...");
   isMoving = true;
   leftMotor->setSpeed(turningMotorSpeed);
   rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(BACKWARD);
-  leftMotor->run(BACKWARD);
-  rightMotor->run(FORWARD);
+  
+  leftMotor->run(FORWARD);
+  rightMotor->run(BACKWARD);
 }
 void turnLeftOnSpot() {
   Serial.println("Turning left ON SPOT ...");
   isMoving = true;
   leftMotor->setSpeed(turningMotorSpeed);
   rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(BACKWARD);
-  // rightMotor->run(FORWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(BACKWARD);
+
+  leftMotor->run(BACKWARD);
+  rightMotor->run(FORWARD);
 }
 void leftABit(){
   //Serial.println("left a bit");
   isMoving = true;
-  leftMotor->setSpeed(steeringMotorSpeed/5);
-  leftMotor->run(BACKWARD);
-  rightMotor->setSpeed(steeringMotorSpeed);
-  rightMotor->run(BACKWARD);
+  leftMotor->setSpeed(steeringMotorSpeed*0);
+  rightMotor->setSpeed(steeringMotorSpeed+50);
+  if (reverse == true){
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  else{
+    leftMotor->run(FORWARD);
+    rightMotor->run(FORWARD);
+  }
 }
 void rightABit(){
   //Serial.println("right a bit");
   isMoving = true;
-  rightMotor->setSpeed(steeringMotorSpeed/5);
-  rightMotor->run(BACKWARD);
-  leftMotor->setSpeed(steeringMotorSpeed+30);// might be good removing + 30
-  leftMotor->run(BACKWARD);
+  rightMotor->setSpeed(steeringMotorSpeed*0);
+  leftMotor->setSpeed(steeringMotorSpeed+50);// might be good removing + 30
+  if (reverse == true){
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  else{
+    leftMotor->run(FORWARD);
+    rightMotor->run(FORWARD);
+  }
 }
