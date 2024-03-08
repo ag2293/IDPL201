@@ -6,12 +6,10 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *leftMotor = AFMS.getMotor(3);//M3 pin
 Adafruit_DCMotor *rightMotor = AFMS.getMotor(4);//M4 pin
 //initalise motor variables
-int motorSpeed = 200;//200
-int reverseMotorSpeed = 200; //(may need seperate speed callib for reversing)
-int steeringMotorSpeed = 180;//180
-int turningMotorSpeed = 180;//180
-int slowMotorSpeed = 100;//CALIBRATE
-int timeLength = 200; // define turning time
+int motorSpeed = 220;//200
+int reverseMotorSpeed = 220; //(may need seperate speed callib for reversing)
+int steeringMotorSpeed = 190;//180
+int turningMotorSpeed = 190;//180
 bool isMoving = false; // Tracks whether the robot is moving
 // ----------------------------------
 // -----LED INITILIASATION-------
@@ -29,14 +27,11 @@ int front_left_line_sensor_pin =2; // sensor on line at front
 int front_right_line_sensor_pin =13; // sensor on line at back
 // ----------------------------------
 // -----Junction INITILIASATION-------
-bool at_T_junction = false;// can only go left or right
-bool at_right_T_junction = false;// can only go right or forward
-bool at_left_T_junction = false;// can only go left or forward
 
 bool left = false;
 bool right = false;
 static unsigned long totalMillis = 2200;//needs atleast one second after junction detected before it can be detected again.
-static unsigned long junctionDelayMillis = 2700;//needs atleast 1 second after junction detected before it can be detected again.
+static unsigned long junctionDelayMillis = 550;//needs atleast 1 second after junction detected before it can be detected again.
 unsigned long startMillis = 0;
 bool junction_detected = false;
 
@@ -92,8 +87,15 @@ void loop() {
   
   //// NAVIGATION CODE GOES HERE
 
+  if (left_180 == true){
+    turn_left = true;
+  }
+  if (right_180 == true){
+    turn_right = true;
+  }
+
   //// actual turning (180 turning set if needed and no forward or backward motion as done on line not on junction)
-  if (turn_left == true || left_180 == true){
+  if (turn_left == true){
     
     if (started_turn == false && turning == false && check_end_turn == false){
       if ((millis() - startMillis > junctionDelayMillis && left_line_value == 0) || left_180 == true){
@@ -128,7 +130,7 @@ void loop() {
     }
     ////
   }
-  if (turn_right == true || right_180 == true){
+  if (turn_right == true){
     if (started_turn == false && turning == false && check_end_turn == false){
       if ((millis() - startMillis > junctionDelayMillis && right_line_value == 0) || right_180 == true){
         turnRight();
@@ -165,9 +167,21 @@ void loop() {
   }
 
 
+  //// sets turning direction
+  if (junction_detected == true){//
+    Serial.println("Junction detected");
+    turn_left = left;
+    turn_right = right;
+    left = false;
+    right = false;
+    junction_detected = false;
+  }
+  ////
+
+
   
   //e.g., for left detected if passing junction, left veer will happen but then right will cancel, till it leaves junction (hopefully enough for it to not veer off)
-  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false && at_left_T_junction == false){// will not steer left in junction
+  if (front_left_line_value == 1 && front_right_line_value == 0 && turn_left == false && turn_right == false && junction_detected == false){// will not steer left in junction
     if (reverse == true){
       rightABit();// correct in opposite way 
     }
@@ -175,7 +189,7 @@ void loop() {
       leftABit();
     }
   }
-  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false && at_right_T_junction == false){
+  if (front_left_line_value == 0 && front_right_line_value == 1 && turn_left == false && turn_right == false && junction_detected == false){
     if (reverse == true){
       leftABit();//correct in opposite way
     }
@@ -189,22 +203,10 @@ void loop() {
   
 
   
-  //// sets turning direction
-  if (junction_detected == true){//
-    Serial.println("Junction detected");
-    turn_left = left;
-    turn_right = right;
-    left = false;
-    right = false;
-    junction_detected = false;
-  }
-  ////
+  
 
 
-  if(front_left_line_value==0 && front_right_line_value==0 && turn_left == false && turn_right == false){ //FORWARD if correct at start
-    at_left_T_junction = false;
-    at_right_T_junction = false;
-    at_T_junction = false;
+  if (front_left_line_value==0 && front_right_line_value==0 && turn_left == false && turn_right == false){ //FORWARD if correct at start
     //Serial.println("FORWARD");
     if (reverse == true){
       moveBackward();
@@ -217,35 +219,23 @@ void loop() {
   
   //// junctions dependent on route --> i.e., left and right predetermined, junction detected is the purpose of this code
   if (turn_left == false && turn_right == false && junction_detected == false && (millis() - startMillis > totalMillis)){
-    if ((left_line_value==1 && right_line_value==1) || (left_line_value==1 && right_line_value==0) || (left_line_value==0 && right_line_value==1)){
-      if (left_line_value==1 && right_line_value==1){
-        at_T_junction = true;
-        junction_detected = true;
-      }
-      else if (left_line_value==1 && right_line_value==0){
-        Serial.println("LEFT");
-        at_left_T_junction = true;
-        if (left == true){
-          junction_detected = true;
-        }
-        
-      }
-      if (left_line_value==0 && right_line_value==1){
-        Serial.println("RIGHT");
-        at_right_T_junction = true;
-        if (right == true){
-          junction_detected = true;
-        }
-      }
+    if (left_line_value==1 || right_line_value==1){
+      
+
+      // for now always turn right
+      right = true;
+      //REMOVE as will be set in navigation selection statement.
+
+
+      junction_detected = true;
+      
       
 
 
       if (reverse == true){//in next run should detect it
         set_next_action = true;
       }
-      // for now always turn right
-      right = true;
-      //REMOVE as will be set in navigation selection statement.
+      
 
       startMillis = millis();
     }
@@ -269,16 +259,7 @@ void moveForward() {
   rightMotor->run(FORWARD);
 }
 
-void moveForwardSlowly() {
-  Serial.println("Moving forwards slowly ...");
-  isMoving = true; // Start moving
-  leftMotor->setSpeed(slowMotorSpeed);
-  rightMotor->setSpeed(slowMotorSpeed);
-  //leftMotor->run(BACKWARD);
-  //rightMotor->run(BACKWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
-}
+
 
 void stopMoving() {
   Serial.println("Stopping motion ...");
@@ -302,34 +283,6 @@ void moveBackward() {
 }
 
 void turnRight() {
-  Serial.println("Turning right ...");
-
-  //moveForward();
-  //delay(250);
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed);
-  rightMotor->setSpeed(turningMotorSpeed/6);
-  // leftMotor->run(BACKWARD);
-  // rightMotor->run(FORWARD);
-  
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
-}
-void turnLeft() {
-  //Serial.println("Turning left ...");
-  //moveForward();
-  //delay(250);
-
-  isMoving = true;
-  leftMotor->setSpeed(turningMotorSpeed/6);
-  rightMotor->setSpeed(turningMotorSpeed);
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(BACKWARD);
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
-}
-
-void turnRightOnSpot() {
   
   Serial.println("Turning right ON SPOT ...");
   isMoving = true;
@@ -339,7 +292,7 @@ void turnRightOnSpot() {
   leftMotor->run(FORWARD);
   rightMotor->run(BACKWARD);
 }
-void turnLeftOnSpot() {
+void turnLeft() {
   Serial.println("Turning left ON SPOT ...");
   isMoving = true;
   leftMotor->setSpeed(turningMotorSpeed);
@@ -351,8 +304,8 @@ void turnLeftOnSpot() {
 void leftABit(){
   //Serial.println("left a bit");
   isMoving = true;
-  leftMotor->setSpeed(steeringMotorSpeed*0);
-  rightMotor->setSpeed(steeringMotorSpeed+50);
+  leftMotor->setSpeed(steeringMotorSpeed/5);
+  rightMotor->setSpeed(steeringMotorSpeed);
   if (reverse == true){
     leftMotor->run(BACKWARD);
     rightMotor->run(BACKWARD);
@@ -365,8 +318,8 @@ void leftABit(){
 void rightABit(){
   //Serial.println("right a bit");
   isMoving = true;
-  rightMotor->setSpeed(steeringMotorSpeed*0);
-  leftMotor->setSpeed(steeringMotorSpeed+50);// might be good removing + 30
+  rightMotor->setSpeed(steeringMotorSpeed/5);
+  leftMotor->setSpeed(steeringMotorSpeed);// might be good removing + 30
   if (reverse == true){
     leftMotor->run(BACKWARD);
     rightMotor->run(BACKWARD);
