@@ -19,20 +19,19 @@ String pick_up_3_green[5] = {"Forward_FR", "Right", "Left", "Left", "Block_Detec
 String pick_up_3_red[6] = {"Forward_FL", "Left", "Forward_FL", "Right", "Left", "Block_Detection"};// red to 3
 String drop_off_3_green[7] = {"Reverse", "Left", "Right", "Left", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 3 to green
 String drop_off_3_red[8] = {"Reverse", "Left", "Left", "Forward_FR", "Right", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 3 to red
-String pick_up_4_green[12] = {"Forward_FR", "Forward_FR", "Forward_FR", "Right", "Block_Detection", "Forward_FR", "Right", "Left", "Forward_FL", "Right", "Right", "Block_Detection"};// green to 4
-String pick_up_4_red[12] = {"Forward_FL", "Forward_FL", "Left", "Block_Detection", "Forward_FL", "Left", "Forward_FL", "Right", "Forward_FL", "Right", "Right", "Block_Detection"};// red to 4
+String pick_up_4_green[5] = {"Forward_FR", "Forward_FR", "Forward_FR", "Right", "Block_Detection"};// green to 4
+String pick_up_4_red[4] = {"Forward_FL", "Forward_FL", "Left", "Block_Detection"};// red to 4
 String drop_off_4_green[7] = {"Reverse", "Right", "Forward_FL", "Forward_FL", "Forward_FL", "Drop_Block", "Turn_180_Left"};// 4 to green
 String drop_off_4_red[6] = {"Reverse", "Left", "Forward_FR", "Forward_FR", "Drop_Block", "Turn_180_Right"};// 4 to red
-String return_to_start_green[4] = {"Right", "Forward_FL", "Left", "Reverse"};// green to Start
-String return_to_start_red[3] = {"Left", "Right", "Reverse"};// red to Start
+String return_to_start_green[4] = {"Right", "Forward_FL", "Right", "Turn_180_END"};// green to Start
+String return_to_start_red[3] = {"Left", "Left", "Turn_180_END"};// red to Start
 
 // Array of pointers to each route array for easier iteration
 String *routes[17] = {pick_up_1, drop_off_1_green, drop_off_1_red, pick_up_2_green, pick_up_2_red, drop_off_2_green, drop_off_2_red, pick_up_3_green, pick_up_3_red, drop_off_3_green, drop_off_3_red, pick_up_4_green, pick_up_4_red, drop_off_4_green, drop_off_4_red, return_to_start_green, return_to_start_red};
-int routeSizes[17] = {3, 5, 6, 6, 4, 7, 6, 5, 6, 7, 8, 12, 12, 7, 6, 4, 3};
+int routeSizes[17] = {3, 5, 6, 6, 4, 7, 6, 5, 6, 7, 8, 5, 4, 7, 6, 4, 3};
 
-//pick_up_1, drop_off_1, pick_up_2, drop_off_2, pick_up_3, drop_off_3, pick_up_4, drop_off_4, return_to_start
-bool tasks_completed[9] = {false, false, false, false, false, false, false, false, false};
-const bool all_tasks_completed[9] = {1,1,1,1,1,1,1,1,1};
+
+
 
 bool red = true;//colour red or (if not) black
 bool black = false;//colour red or (if not) black
@@ -69,9 +68,10 @@ void loop() {
   
   if (insideRoute == false){
     //Serial.println("HELOO");
+    int index = (currentRoute+1)/2;//integer division i.e., 3/2 == 1
     
     // Execute routes sequentially, checking completion
-    if (tasks_completed == all_tasks_completed) {
+    if ((2*index + 1) > 16) {
       //STOP MOVING AND DELAY
       Serial.println("");
       Serial.println("All routes completed.");
@@ -80,42 +80,31 @@ void loop() {
       // trigger reverseFORSETTIME function
     } 
     else {
-      //try this code
-      int index = (currentRoute+1)/2;
-      tasks_completed[index] = true;
-
-      Serial.println(tasks_completed[index]);
+      
+      
 
       //else this code
-      /*
-      if (currentRoute == 1){
-        tasks_completed[0] = true;
+      
+      // FOR COLOUR
+      if (currentRoute == 1 || currentRoute == 2){
+        red = true;
+        black = false;
       }
-      else if (currentRoute == 2 || currentRoute == 3){
-        tasks_completed[1] = true;
+      else if (currentRoute == 3|| currentRoute == 4 || currentRoute == 5 || currentRoute == 6){
+        red = false;
+        black = true;
       }
-      else if (currentRoute == 4 || currentRoute == 5){
-        tasks_completed[2] = true;
+      else if (currentRoute == 7|| currentRoute == 8 || currentRoute == 9 || currentRoute == 10){
+        red = false;
+        black = true;
       }
-      else if (currentRoute == 6 || currentRoute == 7){
-        tasks_completed[3] = true;
+      else if (currentRoute == 11|| currentRoute == 12 || currentRoute == 13 || currentRoute == 14){
+        red = true;
+        black = false;
       }
-      else if (currentRoute == 8 || currentRoute == 9){
-        tasks_completed[4] = true;
-      }
-      else if (currentRoute == 10 || currentRoute == 11){
-        tasks_completed[5] = true;
-      }
-      else if (currentRoute == 12 || currentRoute == 13){
-        tasks_completed[6] = true;
-      }
-      else if (currentRoute == 14 || currentRoute == 15){
-        tasks_completed[7] = true;
-      }
-      else if (currentRoute == 16 || currentRoute == 17){
-        tasks_completed[8] = true;
-      }
-      */
+      //
+      
+      
       
       if (black == true){
         currentRoute = (2*index + 1);//green route
@@ -140,6 +129,12 @@ void loop() {
     }
     else if (action == "Right"){
       right = true;
+    }
+    else if (action == "Turn_180_END"){// go back a bit (off start block), spin around, reverse after
+
+      Serial.println("AT END doing turn ....");
+
+      left_180 = true;
     }
     else if (action == "Forward_FL"){
       left = false;//should just skip junction
