@@ -340,7 +340,7 @@ void forwardAtEnd(){
   float distance = sensor.getDistance()/10;// cm
   if (distance - 8.0 < wall_distance){
     moveForward();
-    while (distance - 3.0 < end_distance){
+    while (distance - 3.0 > end_distance){
       float distance = sensor.getDistance()/10;// cm
       digitalWrite(BLUE_LED, HIGH);
       delay(250);
