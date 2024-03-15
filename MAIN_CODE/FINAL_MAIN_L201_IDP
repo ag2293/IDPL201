@@ -149,18 +149,18 @@ bool black = false;//colour red or (if not) black
 
 // ----------- Initialise SERVOS VARS --------------------
 
-Servo beak_servo;
-Servo head_servo;
+Servo beak_servo;//servo attatched to claw which holds block
+Servo head_servo;// servo attatched to body which holds claw
 
-
+// different grabber sevo positions
 int open_pos_beak_servo = 30; 
 int closed_pos_beak_servo = 0; 
 int up_pos_head_servo = 0; 
 int down_pos_head_servo = 57; 
 int down_pos_lifted_head_servo = 50;
 
-int beak_pos = 0;
-int head_pos = 0;
+int beak_pos = 0;// for slow consistent turning
+int head_pos = 0;// for slow consistent turning
 
 // --------------------------------------------------------------
 
@@ -177,11 +177,11 @@ bool debug_grabber = false;//to initialise grabbers --> delay introduced before 
 
 
 //---------------- Button interrupt -----------------
-void(* resetFunc) (void) = 0; //  claim the position --> ISSUE
+void(* resetFunc) (void) = 0; //  for reset function
 
 void IRS(){
   Serial.println("RESET");//have to reopen serial comms to see.
-  resetFunc();
+  resetFunc();// if button pressed again --> interrupt called to reset Arduino
 }
 
 // ---------------------------------------------
@@ -191,7 +191,7 @@ void IRS(){
 void openBeak() { 
   int pos;
   
-  for (pos = beak_pos; pos <= open_pos_beak_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+  for (pos = beak_pos; pos <= open_pos_beak_servo; pos += 1) { // slowly opens beak/claw
     beak_servo.write(pos); // tell servo to go to position
     delay(15); // waits 15 ms for the servo to reach the position 
   }
@@ -202,9 +202,9 @@ void openBeak() {
 void closeBeak() { 
   int pos;
 
-  for (pos = beak_pos; pos >= closed_pos_beak_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+  for (pos = beak_pos; pos >= closed_pos_beak_servo; pos -= 1) { // slowly closes beak/claw
     beak_servo.write(pos); // tell servo to go to position
-    delay(50); // waits 15 ms for the servo to reach the position 
+    delay(50); // waits 50 ms for the servo to reach the position 
   }
   beak_pos = closed_pos_beak_servo;
 }
@@ -212,9 +212,9 @@ void closeBeak() {
 void downHead() { 
   int pos;
 
-  for (pos = head_pos; pos <= down_pos_head_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+  for (pos = head_pos; pos <= down_pos_head_servo; pos += 1) { // slowly lowers grabber down 
     head_servo.write(pos); // tell servo to go to position
-    delay(25); // waits 15 ms for the servo to reach the position 
+    delay(25); // waits 25 ms for the servo to reach the position 
   }
   head_pos = down_pos_head_servo;
 }
@@ -223,15 +223,15 @@ void downLiftedHead() {
   int pos;
 
   if (head_pos == down_pos_head_servo) {
-    for (pos = head_pos; pos >= down_pos_lifted_head_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+    for (pos = head_pos; pos >= down_pos_lifted_head_servo; pos -= 1) { // if in down position, raise slightly 
       head_servo.write(pos); // tell servo to go to position
-      delay(50); // waits 15 ms for the servo to reach the position 
+      delay(50); // waits 50 ms for the servo to reach the position 
     }
   }
   else if (head_pos == up_pos_head_servo) {
-    for (pos = head_pos; pos <= down_pos_lifted_head_servo; pos += 1) { // goes from 13 degrees to 0 degrees 
+    for (pos = head_pos; pos <= down_pos_lifted_head_servo; pos += 1) { // if in up position, lower slightly
       head_servo.write(pos); // tell servo to go to position
-      delay(50); // waits 15 ms for the servo to reach the position 
+      delay(50); // waits 50 ms for the servo to reach the position 
     }
   }
   head_pos = down_pos_lifted_head_servo;
@@ -240,7 +240,7 @@ void downLiftedHead() {
 void upHead() { 
   int pos;
   
-  for (pos = head_pos; pos >= up_pos_head_servo; pos -= 1) { // goes from 13 degrees to 0 degrees 
+  for (pos = head_pos; pos >= up_pos_head_servo; pos -= 1) { // raise grabber up slowly
     head_servo.write(pos); // tell servo to go to position
     delay(25); // waits 15 ms for the servo to reach the position 
   }
@@ -257,8 +257,7 @@ void moveForward() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(motorSpeed);
   rightMotor->setSpeed(motorSpeed);
-  //leftMotor->run(BACKWARD);
-  //rightMotor->run(BACKWARD);
+  
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
 }
@@ -269,8 +268,7 @@ void moveForwardSlower() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(motorSpeed - 50);
   rightMotor->setSpeed(motorSpeed - 50);
-  //leftMotor->run(BACKWARD);
-  //rightMotor->run(BACKWARD);
+  
   leftMotor->run(FORWARD);
   rightMotor->run(FORWARD);
 }
@@ -291,8 +289,7 @@ void moveBackward() {
   isMoving = true; // Start moving
   leftMotor->setSpeed(reverseMotorSpeed);
   rightMotor->setSpeed(reverseMotorSpeed);
-  //leftMotor->run(BACKWARD);
-  //rightMotor->run(BACKWARD);
+  
   leftMotor->run(BACKWARD);
   rightMotor->run(BACKWARD);
 }
@@ -325,8 +322,8 @@ void leftABit(){
   //Serial.println("left a bit");
   isMoving = true;
   leftMotor->setSpeed(steeringMotorSpeed*0.4);
-  rightMotor->setSpeed(steeringMotorSpeed+60);
-  if (reverse == true){
+  rightMotor->setSpeed(steeringMotorSpeed+60);//right motor faster
+  if (reverse == true){//reverse steering
     leftMotor->run(BACKWARD);
     rightMotor->run(BACKWARD);
   }
@@ -341,8 +338,8 @@ void rightABit(){
   //Serial.println("right a bit");
   isMoving = true;
   rightMotor->setSpeed(steeringMotorSpeed*0.4);
-  leftMotor->setSpeed(steeringMotorSpeed+60);// might be good removing + 30
-  if (reverse == true){
+  leftMotor->setSpeed(steeringMotorSpeed+60);//left motor faster
+  if (reverse == true){//reverse steering
     leftMotor->run(BACKWARD);
     rightMotor->run(BACKWARD);
   }
@@ -357,14 +354,14 @@ void forwardAtEnd(){
   int counter = 0;//each count is half a second
   int time_to_count = 2;//2 seconds
   moveForward();
-  while (counter < time_to_count*2){
+  while (counter < time_to_count*2){//until callibrated delay not done dont stop moving (after line following phase at end  --> i.e., to end up in start zone
     digitalWrite(BLUE_LED, HIGH);
     delay(250);
     digitalWrite(BLUE_LED, LOW);
     delay(250);
   }
   stopMoving();
-  while (true){
+  while (true){// end of program
     delay(1000000);
   }
 }
@@ -411,20 +408,20 @@ void sweep(){
 
 void grabber() {
   // Get the distance in meters
-  float distance = sensor.getDistance()/10;// cm
+  float distance = sensor.getDistance()/10;// get distance from TOF in cm
   
 
-  int colour_detected = digitalRead(IR);
+  int colour_detected = digitalRead(IR);//get digital colour (proximity sensor) reading - red = 1 black = 0
 
   
 
-  // NORMAL FORWARD MOTION
+  // should be doing these checks when still moving forward line following in loop()
 
 
-  if (detect_block == true){
+  if (detect_block == true){// if route says detect block
 
     distance = distance - detection_offset_block;//offset in sensor (in built dont change)
-    if (distance <= detection_distance){
+    if (distance <= detection_distance){// if within colour sensor callibrated range (at which it is properly differentiating black and red)
       if(colour_detected == 1){
         red = true;
         black = false;
@@ -444,7 +441,7 @@ void grabber() {
 
       Serial.println("In range to pick up.");
 
-      digitalWrite(BLUE_LED, LOW);
+      digitalWrite(BLUE_LED, LOW);// turn off blue LED
 
       if(red == true){
         Serial.println("RED");
@@ -463,15 +460,15 @@ void grabber() {
       stopMoving();
       ///
 
-      ////TEST
+      ////main grabbing procedure
       openBeak();
       downHead();
       closeBeak();
       //downLiftedHead();
       upHead();
-      ////TEST
+      ////
 
-      ///turn left a bit
+      ///turn left a bit again
       turnLeft();
       delay(200);//CALLIBRATE
       stopMoving();
@@ -482,27 +479,16 @@ void grabber() {
   }
 
   else if (detect_wall){
-    distance = distance - detection_offset_wall;//offset in sensor (based on if sensor 100% vertical) ADRIAN: is this needed? Could we not make it just so that wall_distance=offset+current wall distance
+    distance = distance - detection_offset_wall;//offset in sensor (based on if sensor 100% vertical)
     // Check if the distance is smaller than dropping off distance
     if (distance < wall_distance) {
       Serial.println("In range to drop off.");
 
       digitalWrite(BLUE_LED, LOW);
       stopMoving();
-
-      ////TEST
       
-
-
-      //moveForward();
-      //delay(300);//CALLIBRATE
       stopMoving();
-
-      //downHead();
-
-      //openBeak();
-      //upHead();
-      sweep();
+      sweep();// dropping mechanism --> must account for if there is already a block there 
 
       digitalWrite(GREEN_LED, LOW);
       digitalWrite(RED_LED, LOW);
@@ -578,10 +564,9 @@ void setup() {
   head_servo.write(up_pos_head_servo);//start up ensure in up already else will jerk at begining
   head_servo.attach(10);// callibrate pin
   head_pos = up_pos_head_servo;
+  
 
-  //upHead();
-
-  if (debug_grabber == true){
+  if (debug_grabber == true){// if trying to check grabber motion instead do full test can put this debug mode on
     openBeak();
     downHead();
     closeBeak();
@@ -594,7 +579,7 @@ void setup() {
   
   
   startMillis = millis();
-//DRIVE OUT OF INITIAL BOX
+  //DRIVE OUT OF INITIAL BOX
   while (millis() - startMillis < 1500){
     moveForward();
     delay(25);
@@ -652,7 +637,7 @@ void loop() {
     set_next_action = false;
     
     
-    String action = routes[currentRoute][indexInsideRoute];
+    String action = routes[currentRoute][indexInsideRoute];// next action in current route
     Serial.println(action);
 
     if (action == "Left"){
@@ -661,7 +646,7 @@ void loop() {
     else if (action == "Right"){
       right = true;
     }
-    else if (action == "Forward_END"){// go back a bit (off start block), spin around, reverse after
+    else if (action == "Forward_END"){// drive a bit line following and rest without for callibrated time
       forward_end = true;
       forward_millis = millis();
     }
@@ -674,21 +659,21 @@ void loop() {
     //ADD these in Route
     else if (action == "Forward_FL_Corner"){
       left = false;//should just skip junction
-      corner = true;
+      corner = true;// should slow down for a corner
     }
     else if (action == "Forward_FR_Corner"){
       right = false;//should just skip junction
-      corner = true;
+      corner = true;// should slow down for a corner
     }
     //
     else if (action == "Reverse"){
       reverse = true;
-      reverse_millis=millis();
+      reverse_millis=millis();// reverse for a certain amount of time with attempted line following --> bit trickier in reverse
     }
-    else if (action == "Turn_180_Left"){
+    else if (action == "Turn_180_Left"){// on spot without junction turn left
       left_180 = true;
     }
-    else if (action == "Turn_180_Right"){
+    else if (action == "Turn_180_Right"){// on spot without junction turn right
       right_180 = true;
     }
     else if (action == "Drop_Block"){
